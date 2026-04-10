@@ -97,19 +97,17 @@ process.stdin.on("end", () => {
   const home = process.env.HOME || "";
   const dir = home && cwd.startsWith(home) ? "~" + cwd.slice(home.length) : cwd;
 
-  const { execSync } = require("child_process");
+  const { execFileSync } = require("child_process");
   let gitBranch = "";
   try {
-    gitBranch = execSync(
-      `GIT_OPTIONAL_LOCKS=0 git -C "${cwd || "."}" symbolic-ref --short HEAD 2>/dev/null`,
-      { encoding: "utf8", timeout: 1000 }
+    gitBranch = execFileSync("git", ["-C", cwd || ".", "symbolic-ref", "--short", "HEAD"],
+      { encoding: "utf8", timeout: 1000, env: { ...process.env, GIT_OPTIONAL_LOCKS: "0" }, stdio: ["pipe", "pipe", "pipe"] }
     ).trim();
   } catch {}
   let gitUser = "";
   try {
-    gitUser = execSync(
-      `git config --global user.name 2>/dev/null`,
-      { encoding: "utf8", timeout: 1000 }
+    gitUser = execFileSync("git", ["config", "--global", "user.name"],
+      { encoding: "utf8", timeout: 1000, stdio: ["pipe", "pipe", "pipe"] }
     ).trim();
   } catch {}
 
@@ -147,8 +145,8 @@ process.stdin.on("end", () => {
   let linesStr = "";
   if (added != null || removed != null) {
     const parts = [];
-    if (added) parts.push(`${GREEN}+${added}${R}`);
-    if (removed) parts.push(`${RED}-${removed}${R}`);
+    if (added != null) parts.push(`${GREEN}+${added}${R}`);
+    if (removed != null) parts.push(`${RED}-${removed}${R}`);
     linesStr = parts.join(`${WHITE}/${R}`);
   }
 
