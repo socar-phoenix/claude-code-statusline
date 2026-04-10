@@ -20,7 +20,7 @@ process.stdin.on("end", () => {
   const WHITE = "\x1b[1;37m";
   const LOGO_COLOR = "\x1b[1;38;5;208m";
 
-  // ── 구간별 색상 ──
+  // ── Color thresholds ──
   function pctColor(pct) {
     if (pct >= 80) return RED;
     if (pct >= 50) return YELLOW;
@@ -71,7 +71,7 @@ process.stdin.on("end", () => {
     return `${pctColor(pct)}${"█".repeat(filled)}${"\x1b[38;5;240m"}${"░".repeat(empty)}${R}`;
   }
 
-  // ── 시각 폭 측정 & 패딩 ──
+  // ── Visual width & padding ──
   function getVisWidth(line) {
     const stripped = line.replace(/\x1b\[[0-9;]*m/g, "");
     let width = 0;
@@ -91,7 +91,7 @@ process.stdin.on("end", () => {
     return gap > 0 ? str + " ".repeat(gap) : str;
   }
 
-  // ── 데이터 수집 ──
+  // ── Data collection ──
   const ctx = d.context_window;
   const cwd = d.workspace?.current_dir || d.cwd || "";
   const home = process.env.HOME || "";
@@ -165,7 +165,7 @@ process.stdin.on("end", () => {
   // Line 1.5: Git branch (only in git repos)
   const lineGit = gitBranch ? `🌿 ${GREEN}${gitBranch}${R}` : "";
 
-  // Line 2: 5H Rate Limit + 7D Rate Limit + Cost + Speed + Input + Output
+  // Line 2: 5H + 7D Rate Limits + Cost + Speed + Input + Output
   const L2a = `🔥 ${WHITE}5H${R} ${progressBar(fiveHPct, 10)}`;
   const L2c1 = `${pctColor(fiveHPct)}${fiveHPct}%${WHITE}${fiveHReset}${R}`;
   const L3a = `📊 ${WHITE}7D${R} ${progressBar(sevenDPct, 10)}`;
@@ -176,7 +176,7 @@ process.stdin.on("end", () => {
   const L3c3 = `📤 ${WHITE}Out ${tokenColor(outTokens)}${fmtTokens(outTokens)}${R}`;
   const line2 = padR(L2a, COL_W) + SP + padR(L2c1, RC1) + SP + padR(L3a, COL_W) + SP + padR(L3c1, RC1) + SP + padR(L2c2, RC2) + SP + padR(L2c3, RC2) + SP + padR(L3c2, RC2) + SP + L3c3;
 
-  // Line 3: Context + Session + Lines changed + Claude version + Git user
+  // Line 3: Context + Session + Lines + Claude version + Git user
   const L4a = `🧠 ${WHITE}Context${R} ${progressBar(ctxPct, 10)}`;
   const L4c1 = `${pctColor(ctxPct)}${ctxPct}%${R} ${pctColor(ctxPct)}${fmtTokens(usedTokens)}${WHITE}/${fmtTokens(ctx.context_window_size)}${R}`;
   const L4c2 = duration ? `⏱️ ${WHITE}Session ${durationColor(duration)}${fmtDuration(duration)}${R}` : "";
