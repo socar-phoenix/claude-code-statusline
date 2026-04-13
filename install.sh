@@ -37,7 +37,7 @@ else
 fi
 
 echo ""
-echo "Done! Restart Claude Code to see the status line."
+echo "Done! Status line is now active."
 echo ""
 echo "To uninstall:"
 echo "  rm $STATUSLINE_FILE"
