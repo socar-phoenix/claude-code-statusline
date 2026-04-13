@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-STATUSLINE_DIR="$HOME/.claude"
+STATUSLINE_DIR="${HOME:-$(eval echo ~)}/.claude"
 STATUSLINE_FILE="$STATUSLINE_DIR/statusline.js"
 SETTINGS_FILE="$STATUSLINE_DIR/settings.json"
 RAW_URL="https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/statusline/statusline.js"
