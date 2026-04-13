@@ -1,0 +1,18 @@
+{
+  "name": "claude-code-statusline",
+  "owner": {
+    "name": "socar-phoenix"
+  },
+  "metadata": {
+    "description": "Claude Code 터미널에 실시간 세션 메트릭을 표시하는 커스텀 상태바",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "statusline",
+      "source": "./statusline",
+      "description": "실시간 세션 메트릭 상태바 (Rate Limits, 비용, 속도, 컨텍스트, 캐시 등)",
+      "version": "1.0.0"
+    }
+  ]
+}
