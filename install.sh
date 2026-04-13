@@ -4,7 +4,7 @@ set -e
 STATUSLINE_DIR="$HOME/.claude"
 STATUSLINE_FILE="$STATUSLINE_DIR/statusline.js"
 SETTINGS_FILE="$STATUSLINE_DIR/settings.json"
-RAW_URL="https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/statusline.js"
+RAW_URL="https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/statusline/statusline.js"
 
 echo "Installing Claude Code Status Line..."
 
