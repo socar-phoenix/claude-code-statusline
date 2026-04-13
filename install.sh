@@ -58,6 +58,9 @@ else
   echo "    \"statusLine\": { \"type\": \"command\", \"command\": \"node $STATUSLINE_FILE\" }"
 fi
 
+# 3. 업데이트 마커 초기화 (설치 직후 불필요한 업데이트 체크 방지)
+echo "$(date +%s)000" > "$STATUSLINE_DIR/.statusline-last-update"
+
 echo ""
 echo "Done! Status line is now active."
 echo ""
