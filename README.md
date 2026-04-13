@@ -22,14 +22,14 @@
 curl -sL https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/install.sh | bash
 ```
 
-설치 후 Claude Code를 재시작하면 적용됩니다.
+설치 후 바로 적용됩니다.
 
 ## 수동 설치
 
 1. `statusline.js` 다운로드:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/statusline.js -o ~/.claude/statusline.js
+curl -sL https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/statusline/statusline.js -o ~/.claude/statusline.js
 ```
 
 2. `~/.claude/settings.json`에 추가:
@@ -43,7 +43,7 @@ curl -sL https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/
 }
 ```
 
-3. Claude Code 재시작.
+3. 바로 적용됩니다.
 
 ## 색상 임계값
 
