@@ -18,8 +18,14 @@
 
 ## 설치
 
+**macOS / Linux**
 ```bash
 curl -sL https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/install.sh | bash
+```
+
+**Windows (PowerShell)**
+```powershell
+irm https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/install.ps1 | iex
 ```
 
 설치 후 바로 적용됩니다.

@@ -1,6 +1,34 @@
 #!/usr/bin/env node
 // Claude Code 커스텀 Status Line - B안: 2줄 컴팩트, 카테고리 그룹핑
 
+// ── 자동 업데이트 (24h마다 최신 버전 백그라운드 다운로드) ──
+(function checkUpdate() {
+  const _fs = require("fs");
+  const _path = require("path");
+  const _os = require("os");
+  const { spawn } = require("child_process");
+  const SELF = __filename;
+  const MARKER = _path.join(_os.homedir(), ".claude", ".statusline-last-update");
+  const RAW_URL = "https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/statusline/statusline.js";
+  try {
+    const now = Date.now();
+    let last = 0;
+    try { last = Number(_fs.readFileSync(MARKER, "utf8")); } catch {}
+    if (now - last < 86400000) return; // 24시간 이내 스킵
+    _fs.writeFileSync(MARKER, String(now)); // 중복 체크 방지
+    const child = spawn(process.execPath, ["-e", [
+      `const h=require("https"),fs=require("fs");`,
+      `h.get(${JSON.stringify(RAW_URL)},r=>{`,
+      `if(r.statusCode!==200)return;`,
+      `let d="";r.on("data",c=>d+=c);`,
+      `r.on("end",()=>{try{`,
+      `if(fs.readFileSync(${JSON.stringify(SELF)},"utf8")!==d)fs.writeFileSync(${JSON.stringify(SELF)},d);`,
+      `}catch{}});}).on("error",()=>{});`,
+    ].join("")], { detached: true, stdio: "ignore" });
+    child.unref();
+  } catch {}
+})();
+
 let input = "";
 process.stdin.on("data", (d) => (input += d));
 process.stdin.on("end", () => {
@@ -83,7 +111,7 @@ process.stdin.on("end", () => {
   // ── 데이터 수집 ──
   const ctx = d.context_window;
   const cwd = d.workspace?.current_dir || d.cwd || "";
-  const home = process.env.HOME || "";
+  const home = require("os").homedir() || "";
   const dir = home && cwd.startsWith(home) ? "~" + cwd.slice(home.length) : cwd;
 
   const { execFileSync } = require("child_process");
