@@ -163,7 +163,6 @@ if (Test-Path $f) {
 ## 요구사항
 
 - Claude Code CLI
-- Node.js
 
 ## License
 
