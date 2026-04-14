@@ -49,6 +49,62 @@ rm ~/.claude/statusline.js
 
 `~/.claude/settings.json`에서 `"statusLine"` 항목을 제거합니다.
 
+## 커스터마이징
+
+`~/.claude/statusline.config.json` 파일을 생성해 표시 항목과 레이아웃을 변경할 수 있습니다.
+
+### 프리셋 방식
+
+```json
+{"preset": "minimal"}
+```
+
+| 프리셋 | 줄 수 | 설명 |
+|--------|-------|------|
+| `default` | 7줄 | 전체 항목 표시 |
+| `focus` | 6줄 | 주요 메트릭 중심 |
+| `compact` | 3줄 | 간결한 표시 |
+| `minimal` | 3줄 | 최소 표시 |
+
+### 직접 지정 방식
+
+```json
+{
+  "lines": [
+    ["model", "path", "branch"],
+    ["context"],
+    ["five_hour"]
+  ]
+}
+```
+
+### 사용 가능한 필드
+
+| 타입 | 필드 | 설명 |
+|------|------|------|
+| inline | `model` | 모델명 |
+| inline | `git_user` | git user + 이모지 |
+| inline | `path` | 작업 경로 |
+| inline | `version` | Claude Code 버전 |
+| inline | `branch` | git 브랜치 |
+| bar | `context` | 컨텍스트 사용률 |
+| bar | `five_hour` | 5시간 토큰 사용률 |
+| bar | `seven_day` | 7일 토큰 사용률 |
+| column | `cost` | 세션 비용 |
+| column | `speed` | 출력 속도 |
+| column | `io_tokens` | 입출력 토큰 |
+| column | `session_time` | 세션 시간 |
+| column | `code_lines` | 코드 변경 줄 수 |
+| column | `cache_ratio` | 캐시 히트율 |
+
+> 같은 줄에 `bar` 타입과 `inline`/`column` 타입을 함께 사용할 수 없습니다.
+> 허용 조합: `inline` + `inline`, `bar` 단독, `column` + `column`
+
+### 슬래시 커맨드
+
+- `/statusline:customize` — 대화형으로 config 생성/수정
+- `/statusline:validate` — 현재 config 유효성 검사
+
 ## 요구사항
 
 - Claude Code CLI
