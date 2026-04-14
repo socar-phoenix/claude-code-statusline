@@ -19,17 +19,12 @@
 
 ## 설치
 
-**macOS / Linux**
-```bash
-curl -sL https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/install.sh | bash
+```
+claude plugin marketplace add socar-phoenix/claude-code-statusline
+claude plugin install statusline
 ```
 
-**Windows (PowerShell)**
-```powershell
-irm https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/install.ps1 | iex
-```
-
-설치 후 바로 적용됩니다.
+설치 후 Claude Code를 재시작하고 `/statusline:setup`을 실행하세요.
 
 ## 색상 임계값
 
@@ -44,52 +39,16 @@ irm https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/
 
 ## 삭제
 
-**macOS / Linux**
-```bash
-# 1. 파일 삭제
-rm ~/.claude/statusline.js
-rm ~/.claude/commands/statusline_customize.md
-rm ~/.claude/commands/statusline_update.md
-rm ~/.claude/statusline.config.json  # 커스텀 설정이 있는 경우
-
-# 2. settings.json에서 statusLine 항목 제거
-node -e "
-  const fs = require('fs');
-  const f = require('os').homedir() + '/.claude/settings.json';
-  const s = JSON.parse(fs.readFileSync(f, 'utf8'));
-  const cmd = s.statusLine && s.statusLine.command || '';
-  if (cmd.includes('statusline.js')) {
-    delete s.statusLine;
-    fs.writeFileSync(f, JSON.stringify(s, null, 2) + '\n');
-    console.log('statusLine 설정 제거 완료');
-  } else if (cmd) {
-    console.log('statusLine이 다른 도구를 가리키고 있어 변경하지 않았습니다');
-  } else {
-    console.log('statusLine 설정이 없습니다');
-  }
-"
+```
+claude plugin uninstall statusline
 ```
 
-**Windows (PowerShell)**
-```powershell
-# 1. 파일 삭제
-Remove-Item "$env:USERPROFILE\.claude\statusline.js" -ErrorAction SilentlyContinue
-Remove-Item "$env:USERPROFILE\.claude\commands\statusline_customize.md" -ErrorAction SilentlyContinue
-Remove-Item "$env:USERPROFILE\.claude\commands\statusline_update.md" -ErrorAction SilentlyContinue
-Remove-Item "$env:USERPROFILE\.claude\statusline.config.json" -ErrorAction SilentlyContinue
-
-# 2. settings.json에서 statusLine 항목 제거
-$f = "$env:USERPROFILE\.claude\settings.json"
-if (Test-Path $f) {
-  $s = Get-Content $f -Raw | ConvertFrom-Json
-  if ($s.statusLine -and $s.statusLine.command -like "*statusline.js*") {
-    $s.PSObject.Properties.Remove("statusLine")
-    $s | ConvertTo-Json -Depth 10 | Out-File $f -Encoding utf8NoBOM
-    Write-Host "statusLine 설정 제거 완료"
-  } elseif ($s.statusLine) {
-    Write-Host "statusLine이 다른 도구를 가리키고 있어 변경하지 않았습니다"
-  }
-}
+수동 정리 (선택):
+```bash
+rm ~/.claude/statusline.js
+rm ~/.claude/statusline.config.json   # 커스텀 설정이 있는 경우
+rm ~/.claude/.statusline-last-update  # 이전 버전 잔여 파일
+# settings.json에서 statusLine 항목 수동 제거
 ```
 
 ## 커스터마이징
@@ -151,14 +110,14 @@ if (Test-Path $f) {
 ⚠️  statusline config error: unknown preset "typo" — using default
 ```
 
-### 슬래시 커맨드
+플러그인 설치 시 아래 커맨드가 자동으로 등록됩니다.
 
-설치 스크립트가 `~/.claude/commands/`에 커맨드 파일도 함께 설치합니다.
+### 슬래시 커맨드
 
 | 커맨드 | 설명 |
 |--------|------|
+| `/statusline:setup` | 최초 설치 후 statusLine 설정 등록 |
 | `/statusline:customize` | 대화형으로 config 생성/수정 (프리셋 선택 / 직접 구성) |
-| `/statusline:update` | statusline.js 및 커맨드 파일을 최신 버전으로 업데이트 |
 
 ## 요구사항
 
