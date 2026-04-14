@@ -58,7 +58,16 @@ fs.writeFileSync(f, JSON.stringify(s, null, 2) + '\n');
   Write-Host "    `"statusLine`": { `"type`": `"command`", `"command`": `"node $StatuslineFile`" }"
 }
 
-# 3. 업데이트 마커 초기화 (설치 직후 불필요한 업데이트 체크 방지)
+# 3. 커맨드 파일 설치 (커스터마이징 도구)
+$CommandsDir = "$StatuslineDir\commands"
+$RawCmdsBase = "https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/.claude/commands"
+New-Item -ItemType Directory -Force -Path $CommandsDir | Out-Null
+foreach ($CmdFile in @("statusline_customize.md", "statusline_validate.md")) {
+  Invoke-WebRequest -Uri "$RawCmdsBase/$CmdFile" -OutFile "$CommandsDir\$CmdFile" -UseBasicParsing
+  Write-Host "  Installed command: $CmdFile"
+}
+
+# 4. 업데이트 마커 초기화 (설치 직후 불필요한 업데이트 체크 방지)
 [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() | Out-File -FilePath "$StatuslineDir\.statusline-last-update" -Encoding utf8NoBOM -NoNewline
 
 Write-Host ""

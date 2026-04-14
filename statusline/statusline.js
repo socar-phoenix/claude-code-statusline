@@ -39,6 +39,45 @@ process.stdin.on("end", () => {
     process.exit(0);
   }
 
+  // ── 레이아웃 프리셋 정의 ──
+  const PRESETS = {
+    default: {
+      lines: [
+        ["model", "git_user", "path"],
+        ["version", "branch"],
+        ["context"],
+        ["five_hour"],
+        ["seven_day"],
+        ["cost", "speed", "io_tokens"],
+        ["session_time", "code_lines", "cache_ratio"]
+      ]
+    },
+    focus: {
+      lines: [
+        ["model", "path"],
+        ["branch"],
+        ["context"],
+        ["five_hour"],
+        ["seven_day"],
+        ["cost", "speed", "code_lines"]
+      ]
+    },
+    compact: {
+      lines: [
+        ["model", "path", "branch"],
+        ["context", "cost"],
+        ["five_hour", "speed"]
+      ]
+    },
+    minimal: {
+      lines: [
+        ["model", "path", "branch"],
+        ["context"],
+        ["five_hour"]
+      ]
+    }
+  };
+
   const E = { model:"🤖", folder:"📂", branch:"🌿", fire:"🔥", chart:"📊", cost:"💰", speed:"⚡️", input:"🔽", output:"🔼", brain:"🧠", clock:"⏱️", pencil:"✏️" };
 
   const R = "\x1b[0m";
@@ -49,8 +88,6 @@ process.stdin.on("end", () => {
   const RED = "\x1b[1;31m";
   const WHITE = "\x1b[1;37m";
   const SEP_COLOR = "\x1b[38;5;117m"; // 하늘색
-  const DOT = `${SEP_COLOR}  |  ${R}`;
-  const BAR = ` ${SEP_COLOR}│${R} `;
 
   // ── 구간별 색상 ──
   function pctColor(pct) {
@@ -186,10 +223,6 @@ process.stdin.on("end", () => {
     const gap = w - getVisWidth(str);
     return gap > 0 ? str + " ".repeat(gap) : str;
   }
-  function padL(str, w) {
-    const gap = w - getVisWidth(str);
-    return gap > 0 ? " ".repeat(gap) + str : str;
-  }
 
   // ── 코딩 버디 ──
   // 이름: git user.name → 없으면 랜덤 친구 이름 (호스트 기반 고정)
@@ -228,21 +261,8 @@ process.stdin.on("end", () => {
     return "(n.n)";                           // 넉넉
   }
 
-  // ── Line 1: 모델 / 버디 / 경로 ──
   const CINDER_COLOR = "\x1b[38;5;208m";
   const expr = getBuddyExpr();
-  const companionLabel = companionName ? `  ${CINDER_COLOR}${buddyEmoji} ${companionName} ${GREEN}${expr}${R}` : "";
-  const line1Left = `${E.model} ${CYAN}${d.model?.display_name || ""}${R}`;
-  const COL_W = getVisWidth(line1Left);
-  const SP = "  ";
-  const line1 = line1Left + companionLabel + SP + `${E.folder} ${BLUE}${dir}${R}`;
-
-  // ── Line 1.5: 깃 브랜치 (별도 줄) ──
-  const lineGit = gitBranch ? `${E.branch} ${GREEN}${gitBranch}${R}` : "";
-
-  // ── 오른쪽 서브 컬럼 폭 ──
-  const RC1 = 18;
-  const RC2 = 18;
 
   // ── Line 1b: 컨텍스트 (브랜치 아래) ──
   function weightEmoji(pct) {
@@ -252,29 +272,11 @@ process.stdin.on("end", () => {
     if (pct >= 20)  return "🧳";  // 짐 있음
     return "🪶";                   // 가벼움
   }
-  const L4a = ctx ? `${weightEmoji(ctxPct)} ${WHITE}컨텍스트${R} ${progressBar(ctxPct, 30)}` : "";
-  const L4c1 = ctx ? `${pctColor(ctxPct)}${String(ctxPct).padStart(3)}%${R} ${pctColor(ctxPct)}${fmtTokens(usedTokens)}${WHITE}/${fmtTokens(ctx.context_window_size)}${R}` : "";
-  const lineCtx = ctx ? padR(L4a, COL_W) + SP + padR(L4c1, RC1) : "";
-
-  // ── Line 2: 현재토큰 (100% 초과 시 추가 비용 표시) ──
+  // ── five_hour 관련 계산값 ──
   const fiveHDisplay = Math.min(fiveHPct, 100);
-  const L2a = `${E.fire} ${WHITE}현재토큰${R} ${progressBar(fiveHDisplay, 30)}`;
   const fiveHOver = fiveHPct > 100 ? ` ${RED}(초과)${R}` : "";
-  const L2c1 = `${pctColor(fiveHPct)}${String(fiveHDisplay).padStart(3)}%${WHITE}${fiveHReset}${R}${fiveHOver}`;
-  const line2 = padR(L2a, COL_W) + SP + padR(L2c1, RC1);
 
-  // ── Line 2b: 주간토큰 ──
-  const L3a = `${E.chart} ${WHITE}주간토큰${R} ${progressBar(sevenDPct, 30)}`;
-  const L3c1 = `${pctColor(sevenDPct)}${String(sevenDPct).padStart(3)}%${WHITE}${sevenDReset}${R}`;
-  const line2b = padR(L3a, COL_W) + SP + padR(L3c1, RC1);
-
-  // ── Line 3: 비용 + 속도 + 입력 ──
-  const L2c2 = `${E.cost} ${WHITE}세션비용 ${costColor(costVal)}$${costVal != null ? costVal.toFixed(2) : "0.00"}${R}`;
-  const L2c3 = `${E.speed} ${WHITE}속도 ${speedColor(tpsVal)}${tpsVal != null ? tpsVal.toFixed(1) : "-"} t/s${R}`;
-  const L3c2 = `${E.input} ${WHITE}입력 ${tokenColor(inTokens)}${fmtTokens(inTokens)}${R}${WHITE}/${R} ${E.output}${WHITE}출력 ${tokenColor(outTokens)}${fmtTokens(outTokens)}${R}`;
-  const line3 = padR(L2c2, COL_W) + SP + padR(L2c3, RC1) + SP + padR(L3c2, COL_W);
-
-  // ── Line 3b: 세션시작 + 코드변경 + 출력 + 캐시/비율 ──
+  // ── session_time 관련 계산값 ──
   const hours = (duration || 0) / 3600000;
   function fatigueEmoji(h) {
     if (h >= 4)   return "🥵";  // 과로
@@ -285,19 +287,332 @@ process.stdin.on("end", () => {
     if (h >= 0.5) return "😊";  // 괜찮음
     return "😎";                 // 상쾌
   }
-  const L4c2 = duration ? `${fatigueEmoji(hours)} ${WHITE}세션 ${durationColor(duration)}${fmtDuration(duration)}${R}` : "";
-  const L4c3 = linesStr ? `${E.pencil} ${linesStr}` : "";
+  // ── cache_ratio 관련 계산값 ──
   const cacheRead = usage.cache_read_input_tokens || 0;
   const cacheCreate = usage.cache_creation_input_tokens || 0;
   const totalIn = (usage.input_tokens || 0) + cacheRead + cacheCreate;
   const cacheHit = totalIn > 0 ? (cacheRead / totalIn * 100).toFixed(0) : "-";
   const oiRatio = inTokens && outTokens ? (outTokens / inTokens).toFixed(1) : "-";
-  const cacheRatioStr = `🔄 ${WHITE}캐시${R} ${GREEN}${cacheHit}%${R} ${WHITE}/${R} ⚖️ ${WHITE}Ratio${R} ${CYAN}${oiRatio}${R}`;
-  const line3b = padR(L4c2 || "", COL_W) + SP + padR(L4c3 || "", RC1) + SP + padR(cacheRatioStr, COL_W);
 
-  // ── 출력 ──
-  const ver = d.version || "";
-  const lineGitVer = `⚙️ ${BLUE}v${ver}${R}` + (gitBranch ? `  ${E.branch} ${GREEN}${gitBranch}${R}` : "");
-  const dataLines = [line1, lineGitVer, lineCtx, line2, line2b, line3, line3b].filter(Boolean);
-  process.stdout.write(dataLines.join("\n") + "\n");
+  // ── FIELDS 레지스트리 ──
+  // 각 필드는 { type, render(data, opts) } 형태로 정의
+  // type: "inline" | "bar" | "column"
+  // render: 해당 필드의 ANSI 문자열 반환
+  const FIELDS = {
+    // ── inline 타입 (5개) ──
+
+    // 모델명 표시
+    model: {
+      type: "inline",
+      render: (data) => `${E.model} ${CYAN}${data.model?.display_name || ""}${R}`,
+    },
+
+    // 코딩 버디 (git user) 표시 — 이름이 있을 때만 렌더
+    git_user: {
+      type: "inline",
+      render: () => {
+        if (!companionName) return "";
+        return `${CINDER_COLOR}${buddyEmoji} ${companionName} ${GREEN}${expr}${R}`;
+      },
+    },
+
+    // 현재 작업 디렉터리 경로
+    path: {
+      type: "inline",
+      render: () => `${E.folder} ${BLUE}${dir}${R}`,
+    },
+
+    // Claude Code 버전
+    version: {
+      type: "inline",
+      render: (data) => {
+        const v = data.version || "";
+        return `⚙️ ${BLUE}v${v}${R}`;
+      },
+    },
+
+    // 현재 git 브랜치 — 브랜치가 있을 때만 렌더
+    branch: {
+      type: "inline",
+      render: () => {
+        if (!gitBranch) return "";
+        return `${E.branch} ${GREEN}${gitBranch}${R}`;
+      },
+    },
+
+    // ── bar 타입 (3개) ──
+    // render(data, opts): opts.maxLabelWidth로 라벨 정렬 후 progress bar 붙여 반환
+
+    // 컨텍스트 윈도우 사용률
+    context: {
+      type: "bar",
+      render: (_data, opts = {}) => {
+        if (!ctx) return "";
+        const label = `${weightEmoji(ctxPct)} ${WHITE}컨텍스트${R}`;
+        const bar = progressBar(ctxPct, 30);
+        const rightInfo = `${pctColor(ctxPct)}${String(ctxPct).padStart(3)}%${R} ${pctColor(ctxPct)}${fmtTokens(usedTokens)}${WHITE}/${fmtTokens(ctx.context_window_size)}${R}`;
+        const labelPad = opts.maxLabelWidth ? padR(label, opts.maxLabelWidth) : label;
+        return `${labelPad} ${bar} ${rightInfo}`;
+      },
+    },
+
+    // 5시간 토큰 사용률
+    five_hour: {
+      type: "bar",
+      render: (_data, opts = {}) => {
+        const label = `${E.fire} ${WHITE}현재토큰${R}`;
+        const bar = progressBar(fiveHDisplay, 30);
+        const rightInfo = `${pctColor(fiveHPct)}${String(fiveHDisplay).padStart(3)}%${WHITE}${fiveHReset}${R}${fiveHOver}`;
+        const labelPad = opts.maxLabelWidth ? padR(label, opts.maxLabelWidth) : label;
+        return `${labelPad} ${bar} ${rightInfo}`;
+      },
+    },
+
+    // 7일 토큰 사용률
+    seven_day: {
+      type: "bar",
+      render: (_data, opts = {}) => {
+        const label = `${E.chart} ${WHITE}주간토큰${R}`;
+        const bar = progressBar(sevenDPct, 30);
+        const rightInfo = `${pctColor(sevenDPct)}${String(sevenDPct).padStart(3)}%${WHITE}${sevenDReset}${R}`;
+        const labelPad = opts.maxLabelWidth ? padR(label, opts.maxLabelWidth) : label;
+        return `${labelPad} ${bar} ${rightInfo}`;
+      },
+    },
+
+    // ── column 타입 (6개) ──
+    // render(data, opts): opts.colWidth로 padR 정렬
+
+    // 세션 비용 (USD)
+    cost: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        const content = `${E.cost} ${WHITE}세션비용 ${costColor(costVal)}$${costVal != null ? costVal.toFixed(2) : "0.00"}${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 토큰 생성 속도 (t/s)
+    speed: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        const content = `${E.speed} ${WHITE}속도 ${speedColor(tpsVal)}${tpsVal != null ? tpsVal.toFixed(1) : "-"} t/s${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 입력/출력 토큰 수
+    io_tokens: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        const content = `${E.input} ${WHITE}입력 ${tokenColor(inTokens)}${fmtTokens(inTokens)}${R}${WHITE}/${R} ${E.output}${WHITE}출력 ${tokenColor(outTokens)}${fmtTokens(outTokens)}${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 세션 경과 시간 — duration 있을 때만 렌더
+    session_time: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        if (!duration) return "";
+        const content = `${fatigueEmoji(hours)} ${WHITE}세션 ${durationColor(duration)}${fmtDuration(duration)}${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 코드 변경 줄 수 — linesStr 있을 때만 렌더
+    code_lines: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        if (!linesStr) return "";
+        const content = `${E.pencil} ${linesStr}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 캐시 히트율 및 입출력 토큰 비율
+    cache_ratio: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        const content = `🔄 ${WHITE}캐시${R} ${GREEN}${cacheHit}%${R} ${WHITE}/${R} ⚖️ ${WHITE}Ratio${R} ${CYAN}${oiRatio}${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+  };
+
+  // ── renderLayout: 레이아웃 정의(lines)를 FIELDS를 통해 렌더링 ──
+  // @param {string[][]} lines  - 각 줄을 필드명 배열로 표현 (예: [["model","git_user"], ["context"]])
+  // @param {object}     data   - 렌더링에 사용할 데이터 객체
+  // @param {string}     [errorBanner] - 오류 배너 문자열 (있으면 첫 줄에 prepend)
+  // @returns {string[]} 렌더링된 줄 배열 (빈 줄 제외)
+  function renderLayout(lines, data, errorBanner) {
+    const result = [];
+
+    // 오류 배너가 있으면 첫 줄에 추가
+    if (errorBanner) result.push(errorBanner);
+
+    // bar 필드 라벨 기준 문자열 (ANSI 포함 — getVisWidth가 ANSI 제거 후 폭 계산)
+    // weightEmoji는 비율에 따라 달라지지만 모두 2폭 이모지이므로 대표값 사용
+    const BAR_LABEL_SAMPLES = {
+      context:   `🪶 ${WHITE}컨텍스트${R}`,
+      five_hour: `${E.fire} ${WHITE}현재토큰${R}`,
+      seven_day: `${E.chart} ${WHITE}주간토큰${R}`,
+    };
+
+    // lines 전체를 순회해 bar 필드 라벨 최대 폭 계산
+    let maxLabelWidth = 0;
+    for (const line of lines) {
+      for (const fieldName of line) {
+        const f = FIELDS[fieldName];
+        if (f && f.type === "bar" && BAR_LABEL_SAMPLES[fieldName]) {
+          const w = getVisWidth(BAR_LABEL_SAMPLES[fieldName]);
+          if (w > maxLabelWidth) maxLabelWidth = w;
+        }
+      }
+    }
+
+    // 각 줄 렌더링
+    for (const line of lines) {
+      // 줄 내 필드 타입 목록 (유효한 필드만)
+      const validFields = line.filter(n => FIELDS[n]);
+      if (validFields.length === 0) continue;
+
+      // 첫 번째 유효 필드의 타입을 줄의 기본 타입으로 사용
+      const primaryType = FIELDS[validFields[0]].type;
+
+      // column 고정 폭
+      const colWidth = 18;
+      let rendered;
+
+      if (primaryType === "inline") {
+        // inline: 공백 2칸으로 join, 빈 문자열 제외
+        rendered = validFields
+          .map(n => FIELDS[n].render(data, {}) ?? "")
+          .filter(s => s !== "")
+          .join("  ");
+
+      } else if (primaryType === "bar") {
+        // bar+column 혼합 줄 처리 (compact 프리셋의 ["context","cost"] 같은 경우)
+        // bar 필드와 column 필드를 분리해 각각 렌더 후 이어붙임
+        const barParts = validFields
+          .filter(n => FIELDS[n].type === "bar")
+          .map(n => FIELDS[n].render(data, { maxLabelWidth }) ?? "")
+          .filter(s => s !== "");
+
+        const colParts = validFields
+          .filter(n => FIELDS[n].type === "column")
+          .map(n => FIELDS[n].render(data, { colWidth }) ?? "")
+          .filter(s => s !== "");
+
+        rendered = [...barParts, ...colParts].join("  ");
+
+      } else if (primaryType === "column") {
+        // column: colWidth 고정 폭, 공백 2칸으로 join
+        rendered = validFields
+          .map(n => FIELDS[n].render(data, { colWidth }) ?? "")
+          .filter(s => s !== "")
+          .join("  ");
+
+      } else {
+        // 알 수 없는 타입 — 해당 줄 skip
+        continue;
+      }
+
+      // 빈 줄은 추가하지 않음
+      if (rendered) result.push(rendered);
+    }
+
+    return result;
+  }
+
+  // ~/.claude/statusline.config.json 을 읽어 설정 반환
+  // 반환값: { lines: string[][], error: string|null }
+  function loadConfig() {
+    const configPath = require("os").homedir() + "/.claude/statusline.config.json";
+    let raw;
+    try {
+      raw = require("fs").readFileSync(configPath, "utf8");
+    } catch (e) {
+      // 파일 없음(ENOENT) 또는 기타 읽기 실패 → 조용히 default 반환
+      return { lines: PRESETS.default.lines, error: null };
+    }
+    let cfg;
+    try {
+      cfg = JSON.parse(raw);
+    } catch {
+      // JSON 파싱 실패 → error 표시, default lines 반환
+      return { lines: PRESETS.default.lines, error: "invalid JSON" };
+    }
+    // [V1] preset + lines 동시 지정 금지
+    if (cfg.preset !== undefined && cfg.lines !== undefined) {
+      return { lines: PRESETS.default.lines, error: `use either "preset" or "lines", not both` };
+    }
+
+    // [V2] preset/lines 모두 없음 (빈 config {})
+    if (cfg.preset === undefined && cfg.lines === undefined) {
+      return { lines: PRESETS.default.lines, error: `must specify "preset" or "lines"` };
+    }
+
+    // [V3] preset 경로 처리 (알 수 없는 preset 포함)
+    if (cfg.preset !== undefined) {
+      const preset = PRESETS[cfg.preset];
+      if (!preset) {
+        return { lines: PRESETS.default.lines, error: `unknown preset "${cfg.preset}"` };
+      }
+      return { lines: preset.lines, error: null };
+    }
+
+    // 이하 cfg.lines 경로
+
+    // [V4] 빈 lines 배열
+    if (!Array.isArray(cfg.lines) || cfg.lines.length === 0) {
+      return { lines: PRESETS.default.lines, error: `"lines" must not be empty` };
+    }
+
+    // [V4b] 각 줄 배열이 비어있으면 안 됨
+    for (let i = 0; i < cfg.lines.length; i++) {
+      if (!Array.isArray(cfg.lines[i]) || cfg.lines[i].length === 0) {
+        return { lines: PRESETS.default.lines, error: `line ${i + 1}: must not be empty` };
+      }
+    }
+
+    // [V5] 알 수 없는 필드명
+    for (const line of cfg.lines) {
+      for (const fieldName of line) {
+        if (!FIELDS[fieldName]) {
+          return { lines: PRESETS.default.lines, error: `unknown field "${fieldName}"` };
+        }
+      }
+    }
+
+    // [V6] 중복 필드 (줄을 넘어 전체 lines에서 검사)
+    const seen = new Set();
+    for (const line of cfg.lines) {
+      for (const fieldName of line) {
+        if (seen.has(fieldName)) {
+          return { lines: PRESETS.default.lines, error: `duplicate field "${fieldName}"` };
+        }
+        seen.add(fieldName);
+      }
+    }
+
+    // [V7] 타입 혼합 (bar + inline 또는 bar + column 혼합 불가)
+    for (let i = 0; i < cfg.lines.length; i++) {
+      const line = cfg.lines[i];
+      const types = new Set(line.map((fieldName) => FIELDS[fieldName].type));
+      if (types.has("bar") && (types.has("inline") || types.has("column"))) {
+        return {
+          lines: PRESETS.default.lines,
+          error: `line ${i + 1}: cannot mix bar with inline/column fields`,
+        };
+      }
+    }
+
+    // 모든 유효성 검사 통과
+    return { lines: cfg.lines, error: null };
+  }
+
+  const { lines, error } = loadConfig();
+  const errorBanner = error ? `⚠️  statusline config error: ${error} — using default` : null;
+  process.stdout.write(renderLayout(lines, d, errorBanner).join("\n") + "\n");
 });
