@@ -543,7 +543,17 @@ process.stdin.on("end", () => {
       // JSON 파싱 실패 → error 표시, default lines 반환
       return { lines: PRESETS.default.lines, error: "invalid JSON" };
     }
-    // preset과 lines 중 하나를 해석 (유효성 검사는 T010에서 추가)
+    // [V1] preset + lines 동시 지정 금지
+    if (cfg.preset !== undefined && cfg.lines !== undefined) {
+      return { lines: PRESETS.default.lines, error: `use either "preset" or "lines", not both` };
+    }
+
+    // [V2] preset/lines 모두 없음 (빈 config {})
+    if (cfg.preset === undefined && cfg.lines === undefined) {
+      return { lines: PRESETS.default.lines, error: `must specify "preset" or "lines"` };
+    }
+
+    // [V3] preset 경로 처리 (알 수 없는 preset 포함)
     if (cfg.preset !== undefined) {
       const preset = PRESETS[cfg.preset];
       if (!preset) {
@@ -551,7 +561,48 @@ process.stdin.on("end", () => {
       }
       return { lines: preset.lines, error: null };
     }
-    return { lines: cfg.lines || PRESETS.default.lines, error: null };
+
+    // 이하 cfg.lines 경로
+
+    // [V4] 빈 lines 배열
+    if (!Array.isArray(cfg.lines) || cfg.lines.length === 0) {
+      return { lines: PRESETS.default.lines, error: `"lines" must not be empty` };
+    }
+
+    // [V5] 알 수 없는 필드명
+    for (const line of cfg.lines) {
+      for (const fieldName of line) {
+        if (!FIELDS[fieldName]) {
+          return { lines: PRESETS.default.lines, error: `unknown field "${fieldName}"` };
+        }
+      }
+    }
+
+    // [V6] 중복 필드
+    const seen = new Set();
+    for (const line of cfg.lines) {
+      for (const fieldName of line) {
+        if (seen.has(fieldName)) {
+          return { lines: PRESETS.default.lines, error: `duplicate field "${fieldName}"` };
+        }
+        seen.add(fieldName);
+      }
+    }
+
+    // [V7] 타입 혼합 (bar + inline 또는 bar + column 혼합 불가)
+    for (let i = 0; i < cfg.lines.length; i++) {
+      const line = cfg.lines[i];
+      const types = new Set(line.map((fieldName) => FIELDS[fieldName].type));
+      if (types.has("bar") && (types.has("inline") || types.has("column"))) {
+        return {
+          lines: PRESETS.default.lines,
+          error: `line ${i + 1}: cannot mix bar with inline/column fields`,
+        };
+      }
+    }
+
+    // 모든 유효성 검사 통과
+    return { lines: cfg.lines, error: null };
   }
 
   const { lines, error } = loadConfig();
