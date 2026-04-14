@@ -44,6 +44,7 @@ irm https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/
 
 ## 삭제
 
+**macOS / Linux**
 ```bash
 # 1. 파일 삭제
 rm ~/.claude/statusline.js
@@ -67,6 +68,28 @@ node -e "
     console.log('statusLine 설정이 없습니다');
   }
 "
+```
+
+**Windows (PowerShell)**
+```powershell
+# 1. 파일 삭제
+Remove-Item "$env:USERPROFILE\.claude\statusline.js" -ErrorAction SilentlyContinue
+Remove-Item "$env:USERPROFILE\.claude\commands\statusline_customize.md" -ErrorAction SilentlyContinue
+Remove-Item "$env:USERPROFILE\.claude\commands\statusline_update.md" -ErrorAction SilentlyContinue
+Remove-Item "$env:USERPROFILE\.claude\statusline.config.json" -ErrorAction SilentlyContinue
+
+# 2. settings.json에서 statusLine 항목 제거
+$f = "$env:USERPROFILE\.claude\settings.json"
+if (Test-Path $f) {
+  $s = Get-Content $f -Raw | ConvertFrom-Json
+  if ($s.statusLine -and $s.statusLine.command -like "*statusline.js*") {
+    $s.PSObject.Properties.Remove("statusLine")
+    $s | ConvertTo-Json -Depth 10 | Out-File $f -Encoding utf8NoBOM
+    Write-Host "statusLine 설정 제거 완료"
+  } elseif ($s.statusLine) {
+    Write-Host "statusLine이 다른 도구를 가리키고 있어 변경하지 않았습니다"
+  }
+}
 ```
 
 ## 커스터마이징
@@ -140,7 +163,7 @@ node -e "
 ## 요구사항
 
 - Claude Code CLI
-- Node.js (Claude Code에 포함)
+- Node.js (macOS/Linux: 대부분 개발 환경에 설치됨, Windows: 별도 설치 필요)
 
 ## License
 
