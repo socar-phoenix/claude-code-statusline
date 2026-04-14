@@ -130,20 +130,12 @@ node -e "
 
 ### 슬래시 커맨드
 
-설치 스크립트(`install.sh` / `install.ps1`)가 실행 시 `~/.claude/commands/`에 커맨드 파일을 자동 설치합니다.
+설치 스크립트가 `~/.claude/commands/`에 커맨드 파일도 함께 설치합니다.
 
 | 커맨드 | 설명 |
 |--------|------|
 | `/statusline:customize` | 대화형으로 config 생성/수정 (프리셋 선택 / 직접 구성) |
 | `/statusline:update` | statusline.js 및 커맨드 파일을 최신 버전으로 업데이트 |
-
-**수동 설치** (커맨드 파일만 별도로 설치할 때):
-
-```bash
-mkdir -p ~/.claude/commands
-cp .claude/commands/statusline_customize.md ~/.claude/commands/
-cp .claude/commands/statusline_update.md ~/.claude/commands/
-```
 
 ## 요구사항
 
