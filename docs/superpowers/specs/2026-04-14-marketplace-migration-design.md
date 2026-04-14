@@ -14,7 +14,7 @@ claude-code-statusline을 현재 install.sh/install.ps1 기반 배포에서 Clau
 
 - 플러그인 `settings.json`은 `agent`와 `subagentStatusLine` 키만 지원 — `statusLine` 키는 자동 등록 불가
 - 플러그인 update 후 lifecycle hook 없음 — SessionStart 훅으로 우회
-- 플러그인 캐시 경로에 버전 번호 포함 (`~/.claude/plugins/cache/.../1.0.0/`) — 고정 경로로 동기화 필요
+- 플러그인 캐시 경로에 버전 번호 또는 git commit sha 포함 (`~/.claude/plugins/cache/.../<version 또는 sha>/`) — settings.json이 직접 참조 불가, 고정 경로로 동기화 필요
 
 ## 디자인
 
@@ -55,18 +55,22 @@ claude-code-statusline을 현재 install.sh/install.ps1 기반 배포에서 Clau
 
 이후 업데이트:
 1. claude plugin update statusline
-2. Claude Code 재시작
-3. SessionStart 훅이 자동으로 캐시 → 고정 경로 동기화
+2. Claude Code 재시작 (SessionStart 훅이 자동으로 캐시 → 고정 경로 동기화)
 ```
 
 ### `/statusline:setup` 스킬
 
 Claude에게 지시하는 `.md` 파일. 실행 시 Claude가 Read/Edit 도구로 직접 처리.
 
+등록할 값:
+```json
+{ "statusLine": { "type": "command", "command": "node ~/.claude/statusline.js" } }
+```
+
 동작:
 1. `~/.claude/settings.json` 읽기
 2. `statusLine` 필드 확인:
-   - 미설정 → `statusLine` 등록 후 완료
+   - 미설정 → 위 값으로 `statusLine` 등록 후 완료
    - 이미 `statusline.js`로 설정됨 → "이미 설정됨" 안내
    - 다른 값 존재 → 현재 값 표시 + 덮어쓸지 사용자에게 확인
 3. 완료 메시지 + "Claude Code 재시작 필요" 안내
@@ -113,6 +117,7 @@ Node.js 스크립트이므로 OS 호환 문제 없음.
 | `.claude/commands/statusline_update.md` | `claude plugin update`가 대체 |
 | `.claude/commands/statusline_customize.md` | `statusline/commands/customize.md`로 이동 |
 | `statusline.js` 내 자동 업데이트 로직 | SessionStart 훅이 대체 |
+| `~/.claude/.statusline-last-update` (기존 사용자 환경) | 자동 업데이트 로직 제거로 불필요 — README 삭제 안내에 포함 |
 
 ### README 변경
 
@@ -127,6 +132,10 @@ claude plugin install statusline
 삭제 방법:
 ```
 claude plugin uninstall statusline
+# 수동 정리:
+rm ~/.claude/statusline.js
+rm ~/.claude/statusline.config.json  # 커스텀 설정 보존 원하면 생략
+# settings.json에서 statusLine 항목 수동 제거
 ```
 
 ### Marketplace
