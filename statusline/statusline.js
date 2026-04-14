@@ -101,6 +101,12 @@ if (process.argv.includes("--setup")) {
     console.log("");
   }
 
+  if (!process.stdin.isTTY) {
+    console.log("터미널에서 직접 실행하세요:");
+    console.log("  node ~/.claude/statusline.js --setup");
+    process.exit(1);
+  }
+
   process.stdin.setRawMode(true);
   process.stdin.resume();
   process.stdin.on("data", (key) => {
