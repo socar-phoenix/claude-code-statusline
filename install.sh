@@ -62,7 +62,7 @@ fi
 COMMANDS_DIR="$STATUSLINE_DIR/commands"
 RAW_CMDS_BASE="https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/.claude/commands"
 mkdir -p "$COMMANDS_DIR"
-for CMD_FILE in statusline_customize.md statusline_validate.md statusline_update.md; do
+for CMD_FILE in statusline_customize.md statusline_update.md; do
   curl -sL "$RAW_CMDS_BASE/$CMD_FILE" -o "$COMMANDS_DIR/$CMD_FILE"
   echo "  Installed command: $CMD_FILE"
 done

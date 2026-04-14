@@ -48,7 +48,6 @@ irm https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/
 # 1. 파일 삭제
 rm ~/.claude/statusline.js
 rm ~/.claude/commands/statusline_customize.md
-rm ~/.claude/commands/statusline_validate.md
 rm ~/.claude/commands/statusline_update.md
 rm ~/.claude/statusline.config.json  # 커스텀 설정이 있는 경우
 
@@ -135,8 +134,7 @@ node -e "
 
 | 커맨드 | 설명 |
 |--------|------|
-| `/statusline:customize` | 대화형으로 config 생성/수정 (프리셋 선택 / 편집 / 직접 구성) |
-| `/statusline:validate` | 현재 config 유효성 검사 및 레이아웃 미리보기 |
+| `/statusline:customize` | 대화형으로 config 생성/수정 (프리셋 선택 / 직접 구성) |
 | `/statusline:update` | statusline.js 및 커맨드 파일을 최신 버전으로 업데이트 |
 
 **수동 설치** (커맨드 파일만 별도로 설치할 때):
@@ -144,7 +142,6 @@ node -e "
 ```bash
 mkdir -p ~/.claude/commands
 cp .claude/commands/statusline_customize.md ~/.claude/commands/
-cp .claude/commands/statusline_validate.md ~/.claude/commands/
 cp .claude/commands/statusline_update.md ~/.claude/commands/
 ```
 
