@@ -543,7 +543,14 @@ process.stdin.on("end", () => {
       // JSON 파싱 실패 → error 표시, default lines 반환
       return { lines: PRESETS.default.lines, error: "invalid JSON" };
     }
-    // 기본 구조만 반환 (유효성 검사는 T008/T010에서 추가)
+    // preset과 lines 중 하나를 해석 (유효성 검사는 T010에서 추가)
+    if (cfg.preset !== undefined) {
+      const preset = PRESETS[cfg.preset];
+      if (!preset) {
+        return { lines: PRESETS.default.lines, error: `unknown preset "${cfg.preset}"` };
+      }
+      return { lines: preset.lines, error: null };
+    }
     return { lines: cfg.lines || PRESETS.default.lines, error: null };
   }
 
