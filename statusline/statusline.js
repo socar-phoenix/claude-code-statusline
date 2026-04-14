@@ -484,6 +484,87 @@ process.stdin.on("end", () => {
     },
   };
 
+  // ── renderLayout: 레이아웃 정의(lines)를 FIELDS를 통해 렌더링 ──
+  // @param {string[][]} lines  - 각 줄을 필드명 배열로 표현 (예: [["model","git_user"], ["context"]])
+  // @param {object}     data   - 렌더링에 사용할 데이터 객체
+  // @param {string}     [errorBanner] - 오류 배너 문자열 (있으면 첫 줄에 prepend)
+  // @returns {string[]} 렌더링된 줄 배열 (빈 줄 제외)
+  function renderLayout(lines, data, errorBanner) {
+    const result = [];
+
+    // 오류 배너가 있으면 첫 줄에 추가
+    if (errorBanner) result.push(errorBanner);
+
+    // bar 필드 라벨 기준 문자열 (ANSI 포함 — getVisWidth가 ANSI 제거 후 폭 계산)
+    // weightEmoji는 비율에 따라 달라지지만 모두 2폭 이모지이므로 대표값 사용
+    const BAR_LABEL_SAMPLES = {
+      context:   `🪶 ${WHITE}컨텍스트${R}`,
+      five_hour: `${E.fire} ${WHITE}현재토큰${R}`,
+      seven_day: `${E.chart} ${WHITE}주간토큰${R}`,
+    };
+
+    // lines 전체를 순회해 bar 필드 라벨 최대 폭 계산
+    let maxLabelWidth = 0;
+    for (const line of lines) {
+      for (const fieldName of line) {
+        const f = FIELDS[fieldName];
+        if (f && f.type === "bar" && BAR_LABEL_SAMPLES[fieldName]) {
+          const w = getVisWidth(BAR_LABEL_SAMPLES[fieldName]);
+          if (w > maxLabelWidth) maxLabelWidth = w;
+        }
+      }
+    }
+
+    // 각 줄 렌더링
+    for (const line of lines) {
+      // 줄 내 필드 타입 목록 (유효한 필드만)
+      const validFields = line.filter(n => FIELDS[n]);
+      if (validFields.length === 0) continue;
+
+      // 첫 번째 유효 필드의 타입을 줄의 기본 타입으로 사용
+      const primaryType = FIELDS[validFields[0]].type;
+
+      let rendered;
+
+      if (primaryType === "inline") {
+        // inline: 공백 2칸으로 join, 빈 문자열 제외
+        rendered = validFields
+          .map(n => FIELDS[n].render(data, {}) ?? "")
+          .filter(s => s !== "")
+          .join("  ");
+
+      } else if (primaryType === "bar") {
+        // bar+column 혼합 줄 처리 (compact 프리셋의 ["context","cost"] 같은 경우)
+        // bar 필드와 column 필드를 분리해 각각 렌더 후 이어붙임
+        const barParts = validFields
+          .filter(n => FIELDS[n].type === "bar")
+          .map(n => FIELDS[n].render(data, { maxLabelWidth }) ?? "")
+          .filter(s => s !== "");
+
+        const colWidth = 18;
+        const colParts = validFields
+          .filter(n => FIELDS[n].type === "column")
+          .map(n => FIELDS[n].render(data, { colWidth }) ?? "")
+          .filter(s => s !== "");
+
+        rendered = [...barParts, ...colParts].join("  ");
+
+      } else if (primaryType === "column") {
+        // column: colWidth 고정 폭(기존 RC1=18 참고), 공백 2칸으로 join
+        const colWidth = 18;
+        rendered = validFields
+          .map(n => FIELDS[n].render(data, { colWidth }) ?? "")
+          .filter(s => s !== "")
+          .join("  ");
+      }
+
+      // 빈 줄은 추가하지 않음
+      if (rendered) result.push(rendered);
+    }
+
+    return result;
+  }
+
   const dataLines = [line1, lineGitVer, lineCtx, line2, line2b, line3, line3b].filter(Boolean);
   process.stdout.write(dataLines.join("\n") + "\n");
 });
