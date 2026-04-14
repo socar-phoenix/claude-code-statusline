@@ -49,7 +49,7 @@ claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plu
 | 50–70% | `(o.o)` | 보통 |
 | 70–80% | `(-_-)` | 불안 |
 | 80–90% | `(;_;)` | 위험 |
-| 90–100% | `(>.< )` | 거의 소진 |
+| 90–100% | `(>.<)` | 거의 소진 |
 | 100%+ | `(X.X)` | 초과 |
 
 ### bar 타입
@@ -118,7 +118,7 @@ claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plu
 | 프리셋 | 줄 수 | 구성 |
 |--------|-------|------|
 | `default` | 7줄 | 전체 메트릭 |
-| `focus` | 6줄 | 핵심 메트릭 (io_tokens, cache_ratio 제외) |
+| `focus` | 6줄 | 핵심 메트릭 (git_user, version, io_tokens, session_time, cache_ratio 제외) |
 | `compact` | 3줄 | 압축 (model+path+branch / context+cost / five_hour+speed) |
 | `minimal` | 3줄 | 최소 (model+path+branch / context / five_hour) |
 
@@ -153,7 +153,7 @@ claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plu
 | `column` | `code_lines` | 코드 변경 라인 수 |
 | `column` | `cache_ratio` | 캐시 히트율 / 토큰 비율 |
 
-> `bar`와 `inline`/`column`은 같은 줄에 혼합 불가  
+> 커스텀 config에서는 `bar`와 `inline`/`column`을 같은 줄에 혼합 불가 (내장 프리셋은 예외)  
 > 동일 필드를 여러 줄에 중복 배치 불가
 
 ## 삭제
