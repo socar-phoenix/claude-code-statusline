@@ -524,6 +524,8 @@ process.stdin.on("end", () => {
       // 첫 번째 유효 필드의 타입을 줄의 기본 타입으로 사용
       const primaryType = FIELDS[validFields[0]].type;
 
+      // column 고정 폭 — 기존 RC1=18과 동일
+      const colWidth = 18;
       let rendered;
 
       if (primaryType === "inline") {
@@ -541,7 +543,6 @@ process.stdin.on("end", () => {
           .map(n => FIELDS[n].render(data, { maxLabelWidth }) ?? "")
           .filter(s => s !== "");
 
-        const colWidth = 18;
         const colParts = validFields
           .filter(n => FIELDS[n].type === "column")
           .map(n => FIELDS[n].render(data, { colWidth }) ?? "")
@@ -551,11 +552,14 @@ process.stdin.on("end", () => {
 
       } else if (primaryType === "column") {
         // column: colWidth 고정 폭(기존 RC1=18 참고), 공백 2칸으로 join
-        const colWidth = 18;
         rendered = validFields
           .map(n => FIELDS[n].render(data, { colWidth }) ?? "")
           .filter(s => s !== "")
           .join("  ");
+
+      } else {
+        // 알 수 없는 타입 — 해당 줄 skip
+        continue;
       }
 
       // 빈 줄은 추가하지 않음
