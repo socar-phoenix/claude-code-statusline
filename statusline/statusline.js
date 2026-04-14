@@ -88,8 +88,6 @@ process.stdin.on("end", () => {
   const RED = "\x1b[1;31m";
   const WHITE = "\x1b[1;37m";
   const SEP_COLOR = "\x1b[38;5;117m"; // 하늘색
-  const DOT = `${SEP_COLOR}  |  ${R}`;
-  const BAR = ` ${SEP_COLOR}│${R} `;
 
   // ── 구간별 색상 ──
   function pctColor(pct) {
@@ -224,10 +222,6 @@ process.stdin.on("end", () => {
   function padR(str, w) {
     const gap = w - getVisWidth(str);
     return gap > 0 ? str + " ".repeat(gap) : str;
-  }
-  function padL(str, w) {
-    const gap = w - getVisWidth(str);
-    return gap > 0 ? " ".repeat(gap) + str : str;
   }
 
   // ── 코딩 버디 ──
@@ -486,7 +480,7 @@ process.stdin.on("end", () => {
       // 첫 번째 유효 필드의 타입을 줄의 기본 타입으로 사용
       const primaryType = FIELDS[validFields[0]].type;
 
-      // column 고정 폭 — 기존 RC1=18과 동일
+      // column 고정 폭
       const colWidth = 18;
       let rendered;
 
@@ -513,7 +507,7 @@ process.stdin.on("end", () => {
         rendered = [...barParts, ...colParts].join("  ");
 
       } else if (primaryType === "column") {
-        // column: colWidth 고정 폭(기존 RC1=18 참고), 공백 2칸으로 join
+        // column: colWidth 고정 폭, 공백 2칸으로 join
         rendered = validFields
           .map(n => FIELDS[n].render(data, { colWidth }) ?? "")
           .filter(s => s !== "")
