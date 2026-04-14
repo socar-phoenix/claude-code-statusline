@@ -94,13 +94,3 @@ Line 4 (빈 입력으로 완료):
 - 같은 줄 bar + inline/column 혼합 불가
 
 위반 시 경고 후 재입력
-
----
-
-## TUI 모드
-
-터미널에서 방향키로 선택하는 인터랙티브 모드도 사용 가능:
-
-```bash
-node ~/.claude/statusline.js --setup
-```

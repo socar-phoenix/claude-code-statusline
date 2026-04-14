@@ -29,108 +29,6 @@
   } catch {}
 })();
 
-// ── --setup: 인터랙티브 프리셋 선택 TUI ──
-if (process.argv.includes("--setup")) {
-  const fs = require("fs");
-  const os = require("os");
-  const configPath = os.homedir() + "/.claude/statusline.config.json";
-
-  const R = "\x1b[0m";
-  const CYAN = "\x1b[1;36m";
-  const GREEN = "\x1b[1;32m";
-  const YELLOW = "\x1b[1;33m";
-  const DIM = "\x1b[2m";
-  const BOLD = "\x1b[1m";
-
-  const presets = [
-    { name: "default", desc: "7줄, 모든 필드", lines: [
-      ["model", "git_user", "path"], ["version", "branch"], ["context"],
-      ["five_hour"], ["seven_day"], ["cost", "speed", "io_tokens"],
-      ["session_time", "code_lines", "cache_ratio"]
-    ]},
-    { name: "focus", desc: "6줄, 핵심 필드", lines: [
-      ["model", "path"], ["branch"], ["context"],
-      ["five_hour"], ["seven_day"], ["cost", "speed", "code_lines"]
-    ]},
-    { name: "compact", desc: "3줄, 간결한 구성", lines: [
-      ["model", "path", "branch"], ["context", "cost"], ["five_hour", "speed"]
-    ]},
-    { name: "minimal", desc: "3줄, 최소 구성", lines: [
-      ["model", "path", "branch"], ["context"], ["five_hour"]
-    ]},
-  ];
-
-  const types = {
-    model:"inline", git_user:"inline", path:"inline", version:"inline", branch:"inline",
-    context:"bar", five_hour:"bar", seven_day:"bar",
-    cost:"column", speed:"column", io_tokens:"column",
-    session_time:"column", code_lines:"column", cache_ratio:"column"
-  };
-
-  // 현재 설정 읽기
-  let currentPreset = null;
-  try {
-    const cfg = JSON.parse(fs.readFileSync(configPath, "utf8"));
-    currentPreset = cfg.preset || null;
-  } catch {}
-
-  let sel = currentPreset ? presets.findIndex(p => p.name === currentPreset) : 0;
-  if (sel < 0) sel = 0;
-
-  function render() {
-    process.stdout.write("\x1b[2J\x1b[H"); // 화면 클리어
-    console.log(`${BOLD}statusline 프리셋 선택${R}  ${DIM}↑↓ 이동  Enter 적용  q 취소${R}\n`);
-
-    presets.forEach((p, i) => {
-      const cur = (currentPreset === p.name) ? ` ${DIM}(현재)${R}` : "";
-      if (i === sel) {
-        console.log(`  ${CYAN}▸ ${p.name}${R}  ${DIM}${p.desc}${R}${cur}`);
-      } else {
-        console.log(`    ${DIM}${p.name}  ${p.desc}${R}${cur}`);
-      }
-    });
-
-    // 선택된 프리셋 미리보기
-    const p = presets[sel];
-    console.log(`\n${BOLD}미리보기:${R}`);
-    p.lines.forEach((line, i) => {
-      const typeSet = new Set(line.map(f => types[f]));
-      const typeLabel = [...typeSet].join("+");
-      console.log(`  ${GREEN}Line ${i + 1}:${R} ${line.join(", ")}  ${DIM}[${typeLabel}]${R}`);
-    });
-    console.log("");
-  }
-
-  if (!process.stdin.isTTY) {
-    console.log("터미널에서 직접 실행하세요:");
-    console.log("  node ~/.claude/statusline.js --setup");
-    process.exit(1);
-  }
-
-  process.stdin.setRawMode(true);
-  process.stdin.resume();
-  process.stdin.on("data", (key) => {
-    if (key[0] === 27 && key[1] === 91) {
-      if (key[2] === 65) sel = Math.max(0, sel - 1);        // ↑
-      if (key[2] === 66) sel = Math.min(presets.length - 1, sel + 1); // ↓
-      render();
-    } else if (key[0] === 13) { // Enter
-      const p = presets[sel];
-      fs.writeFileSync(configPath, JSON.stringify({ preset: p.name }) + "\n");
-      process.stdout.write("\x1b[2J\x1b[H");
-      console.log(`${GREEN}✅${R} ${BOLD}${p.name}${R} 프리셋 적용 완료`);
-      console.log(`${DIM}   ${configPath}${R}`);
-      process.exit(0);
-    } else if (key[0] === 113 || key[0] === 3) { // q 또는 Ctrl+C
-      process.stdout.write("\x1b[2J\x1b[H");
-      console.log("취소");
-      process.exit(0);
-    }
-  });
-
-  render();
-} else {
-
 // ── 기존 파이프 모드 ──
 let input = "";
 process.stdin.on("data", (d) => (input += d));
@@ -631,7 +529,7 @@ process.stdin.on("end", () => {
   // ~/.claude/statusline.config.json 을 읽어 설정 반환
   // 반환값: { lines: string[][], error: string|null }
   function loadConfig() {
-    const configPath = require("os").homedir() + "/.claude/statusline.config.json";
+    const configPath = require("path").join(require("os").homedir(), ".claude", "statusline.config.json");
     let raw;
     try {
       raw = require("fs").readFileSync(configPath, "utf8");
@@ -719,4 +617,3 @@ process.stdin.on("end", () => {
   const errorBanner = error ? `⚠️  statusline config error: ${error} — using default` : null;
   process.stdout.write(renderLayout(lines, d, errorBanner).join("\n") + "\n");
 });
-} // --setup else 닫기
