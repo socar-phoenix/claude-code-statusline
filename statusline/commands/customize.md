@@ -1,3 +1,7 @@
+---
+description: "statusline 레이아웃 커스터마이징 (프리셋 선택 / 직접 구성)"
+---
+
 # /statusline:customize
 
 `~/.claude/statusline.config.json` 설정 커맨드.

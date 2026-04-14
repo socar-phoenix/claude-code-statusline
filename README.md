@@ -4,6 +4,14 @@
 
 ![screenshot](screenshot.png)
 
+## 설치
+
+```
+claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plugin install statusline@claude-code-statusline
+```
+
+새로운 세션을 시작하면 자동으로 적용됩니다.
+
 ## 주요 기능
 
 - **Rate Limits** — 5시간/7일 토큰 사용량 프로그래스 바 + 리셋 시간
@@ -12,24 +20,9 @@
 - **컨텍스트 윈도우** — 사용률 프로그래스 바
 - **세션 시간** — 세션 시작 후 경과 시간
 - **코드 변경량** — 추가/삭제된 라인 수
-- **Git 브랜치** — 현재 브랜치 (git 저장소에서만 표시)
-- **Git 사용자** — git user.name 자동 감지 및 표시
+- **Git** — 현재 브랜치, git user.name 자동 감지
 - **구간별 색상** — 사용량에 따라 초록/노랑/빨강 자동 변경
-- **커스터마이징** — config 파일로 레이아웃 변경, 4개 내장 프리셋, 슬래시 커맨드 지원
-
-## 설치
-
-**macOS / Linux**
-```bash
-curl -sL https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/install.sh | bash
-```
-
-**Windows (PowerShell)**
-```powershell
-irm https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/install.ps1 | iex
-```
-
-설치 후 바로 적용됩니다.
+- **커스터마이징** — 4개 내장 프리셋, 직접 레이아웃 구성, `/statusline:customize`
 
 ## 색상 임계값
 
@@ -38,78 +31,27 @@ irm https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/
 | Rate Limits | < 50% | 50-80% | 80%+ |
 | 비용 | < $20 | $20-50 | $50+ |
 | 속도 | 50+ t/s | 20-50 | < 20 |
-| 토큰 | < 100K | 100-500K | 500K+ |
 | 컨텍스트 | < 50% | 50-80% | 80%+ |
 | 세션 시간 | < 1h | 1-3h | 3h+ |
 
-## 삭제
-
-**macOS / Linux**
-```bash
-# 1. 파일 삭제
-rm ~/.claude/statusline.js
-rm ~/.claude/commands/statusline_customize.md
-rm ~/.claude/commands/statusline_update.md
-rm ~/.claude/statusline.config.json  # 커스텀 설정이 있는 경우
-
-# 2. settings.json에서 statusLine 항목 제거
-node -e "
-  const fs = require('fs');
-  const f = require('os').homedir() + '/.claude/settings.json';
-  const s = JSON.parse(fs.readFileSync(f, 'utf8'));
-  const cmd = s.statusLine && s.statusLine.command || '';
-  if (cmd.includes('statusline.js')) {
-    delete s.statusLine;
-    fs.writeFileSync(f, JSON.stringify(s, null, 2) + '\n');
-    console.log('statusLine 설정 제거 완료');
-  } else if (cmd) {
-    console.log('statusLine이 다른 도구를 가리키고 있어 변경하지 않았습니다');
-  } else {
-    console.log('statusLine 설정이 없습니다');
-  }
-"
-```
-
-**Windows (PowerShell)**
-```powershell
-# 1. 파일 삭제
-Remove-Item "$env:USERPROFILE\.claude\statusline.js" -ErrorAction SilentlyContinue
-Remove-Item "$env:USERPROFILE\.claude\commands\statusline_customize.md" -ErrorAction SilentlyContinue
-Remove-Item "$env:USERPROFILE\.claude\commands\statusline_update.md" -ErrorAction SilentlyContinue
-Remove-Item "$env:USERPROFILE\.claude\statusline.config.json" -ErrorAction SilentlyContinue
-
-# 2. settings.json에서 statusLine 항목 제거
-$f = "$env:USERPROFILE\.claude\settings.json"
-if (Test-Path $f) {
-  $s = Get-Content $f -Raw | ConvertFrom-Json
-  if ($s.statusLine -and $s.statusLine.command -like "*statusline.js*") {
-    $s.PSObject.Properties.Remove("statusLine")
-    $s | ConvertTo-Json -Depth 10 | Out-File $f -Encoding utf8NoBOM
-    Write-Host "statusLine 설정 제거 완료"
-  } elseif ($s.statusLine) {
-    Write-Host "statusLine이 다른 도구를 가리키고 있어 변경하지 않았습니다"
-  }
-}
-```
-
 ## 커스터마이징
 
-`~/.claude/statusline.config.json` 파일을 생성해 표시 항목과 레이아웃을 변경할 수 있습니다.
+`/statusline:customize` 실행 또는 `~/.claude/statusline.config.json` 직접 편집.
 
-### 프리셋 방식
+### 프리셋
 
 ```json
 {"preset": "minimal"}
 ```
 
-| 프리셋 | 줄 수 | 레이아웃 |
-|--------|-------|---------|
-| `default` | 7줄 | model git_user path / version branch / context / five_hour / seven_day / cost speed io_tokens / session_time code_lines cache_ratio |
-| `focus` | 6줄 | model path / branch / context / five_hour / seven_day / cost speed code_lines |
-| `compact` | 3줄 | model path branch / context cost / five_hour speed |
-| `minimal` | 3줄 | model path branch / context / five_hour |
+| 프리셋 | 줄 수 | 구성 |
+|--------|-------|------|
+| `default` | 7줄 | 전체 메트릭 |
+| `focus` | 6줄 | 핵심 메트릭 |
+| `compact` | 3줄 | 압축 |
+| `minimal` | 3줄 | 최소 |
 
-### 직접 지정 방식
+### 직접 구성
 
 ```json
 {
@@ -123,47 +65,17 @@ if (Test-Path $f) {
 
 ### 사용 가능한 필드
 
-| 타입 | 필드 | 설명 |
-|------|------|------|
-| inline | `model` | 모델명 |
-| inline | `git_user` | git user + 이모지 |
-| inline | `path` | 작업 경로 |
-| inline | `version` | Claude Code 버전 |
-| inline | `branch` | git 브랜치 |
-| bar | `context` | 컨텍스트 사용률 |
-| bar | `five_hour` | 5시간 토큰 사용률 |
-| bar | `seven_day` | 7일 토큰 사용률 |
-| column | `cost` | 세션 비용 |
-| column | `speed` | 출력 속도 |
-| column | `io_tokens` | 입출력 토큰 |
-| column | `session_time` | 세션 시간 |
-| column | `code_lines` | 코드 변경 줄 수 |
-| column | `cache_ratio` | 캐시 히트율 |
+| 타입 | 필드 |
+|------|------|
+| inline | `model`, `git_user`, `path`, `version`, `branch` |
+| bar | `context`, `five_hour`, `seven_day` |
+| column | `cost`, `speed`, `io_tokens`, `session_time`, `code_lines`, `cache_ratio` |
 
-> 같은 줄에 `bar` 타입과 `inline`/`column` 타입을 함께 사용할 수 없습니다.
-> 허용 조합: `inline` + `inline`, `bar` 단독, `column` + `column`
+> 같은 줄에 `bar`와 `inline`/`column` 혼합 불가
 
-### config 오류 처리
-
-잘못된 config는 에러 배너를 표시하고 default 레이아웃으로 자동 fallback됩니다.
+## 삭제
 
 ```
-⚠️  statusline config error: unknown preset "typo" — using default
+claude plugin uninstall statusline
 ```
 
-### 슬래시 커맨드
-
-설치 스크립트가 `~/.claude/commands/`에 커맨드 파일도 함께 설치합니다.
-
-| 커맨드 | 설명 |
-|--------|------|
-| `/statusline:customize` | 대화형으로 config 생성/수정 (프리셋 선택 / 직접 구성) |
-| `/statusline:update` | statusline.js 및 커맨드 파일을 최신 버전으로 업데이트 |
-
-## 요구사항
-
-- Claude Code CLI
-
-## License
-
-MIT
