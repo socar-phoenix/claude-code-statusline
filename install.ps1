@@ -73,6 +73,5 @@ foreach ($CmdFile in @("statusline_customize.md", "statusline_update.md")) {
 Write-Host ""
 Write-Host "Done! Status line is now active."
 Write-Host ""
-Write-Host "To uninstall:"
-Write-Host "  Remove-Item '$StatuslineFile'"
-Write-Host "  # Remove `"statusLine`" from $SettingsFile"
+Write-Host "To uninstall: see README.md"
+Write-Host "  https://github.com/socar-phoenix/claude-code-statusline#삭제"
