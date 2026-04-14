@@ -46,6 +46,9 @@ irm https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/
 
 ```bash
 rm ~/.claude/statusline.js
+rm ~/.claude/commands/statusline_customize.md
+rm ~/.claude/commands/statusline_validate.md
+rm ~/.claude/statusline.config.json  # 커스텀 설정이 있는 경우
 ```
 
 `~/.claude/settings.json`에서 `"statusLine"` 항목을 제거합니다.
