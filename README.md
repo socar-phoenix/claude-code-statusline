@@ -51,14 +51,21 @@ rm ~/.claude/commands/statusline_customize.md
 rm ~/.claude/commands/statusline_validate.md
 rm ~/.claude/statusline.config.json  # 커스텀 설정이 있는 경우
 
-# 2. settings.json에서 statusLine 항목 제거
+# 2. settings.json에서 statusLine 항목 제거 (우리가 설치한 경우에만)
 node -e "
   const fs = require('fs');
   const f = require('os').homedir() + '/.claude/settings.json';
   const s = JSON.parse(fs.readFileSync(f, 'utf8'));
-  delete s.statusLine;
-  fs.writeFileSync(f, JSON.stringify(s, null, 2) + '\n');
-  console.log('statusLine 설정 제거 완료');
+  const cmd = s.statusLine && s.statusLine.command || '';
+  if (cmd.includes('statusline.js')) {
+    delete s.statusLine;
+    fs.writeFileSync(f, JSON.stringify(s, null, 2) + '\n');
+    console.log('statusLine 설정 제거 완료');
+  } else if (cmd) {
+    console.log('statusLine이 다른 도구(' + cmd + ')를 가리키고 있어 변경하지 않았습니다');
+  } else {
+    console.log('statusLine 설정이 없습니다');
+  }
 "
 ```
 
