@@ -45,13 +45,22 @@ irm https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/
 ## 삭제
 
 ```bash
+# 1. 파일 삭제
 rm ~/.claude/statusline.js
 rm ~/.claude/commands/statusline_customize.md
 rm ~/.claude/commands/statusline_validate.md
 rm ~/.claude/statusline.config.json  # 커스텀 설정이 있는 경우
-```
 
-`~/.claude/settings.json`에서 `"statusLine"` 항목을 제거합니다.
+# 2. settings.json에서 statusLine 항목 제거
+node -e "
+  const fs = require('fs');
+  const f = require('os').homedir() + '/.claude/settings.json';
+  const s = JSON.parse(fs.readFileSync(f, 'utf8'));
+  delete s.statusLine;
+  fs.writeFileSync(f, JSON.stringify(s, null, 2) + '\n');
+  console.log('statusLine 설정 제거 완료');
+"
+```
 
 ## 커스터마이징
 
