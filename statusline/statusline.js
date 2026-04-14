@@ -569,6 +569,28 @@ process.stdin.on("end", () => {
     return result;
   }
 
+  // ~/.claude/statusline.config.json 을 읽어 설정 반환
+  // 반환값: { lines: string[][], error: string|null }
+  function loadConfig() {
+    const configPath = require("os").homedir() + "/.claude/statusline.config.json";
+    let raw;
+    try {
+      raw = require("fs").readFileSync(configPath, "utf8");
+    } catch (e) {
+      // 파일 없음(ENOENT) 또는 기타 읽기 실패 → 조용히 default 반환
+      return { lines: PRESETS.default.lines, error: null };
+    }
+    let cfg;
+    try {
+      cfg = JSON.parse(raw);
+    } catch {
+      // JSON 파싱 실패 → error 표시, default lines 반환
+      return { lines: PRESETS.default.lines, error: "invalid JSON" };
+    }
+    // 기본 구조만 반환 (유효성 검사는 T008/T010에서 추가)
+    return { lines: cfg.lines || PRESETS.default.lines, error: null };
+  }
+
   const dataLines = [line1, lineGitVer, lineCtx, line2, line2b, line3, line3b].filter(Boolean);
   process.stdout.write(dataLines.join("\n") + "\n");
 });
