@@ -15,6 +15,7 @@
 - **Git 브랜치** — 현재 브랜치 (git 저장소에서만 표시)
 - **Git 사용자** — git user.name 자동 감지 및 표시
 - **구간별 색상** — 사용량에 따라 초록/노랑/빨강 자동 변경
+- **커스터마이징** — config 파일로 레이아웃 변경, 4개 내장 프리셋, 슬래시 커맨드 지원
 
 ## 설치
 
@@ -59,12 +60,12 @@ rm ~/.claude/statusline.js
 {"preset": "minimal"}
 ```
 
-| 프리셋 | 줄 수 | 설명 |
-|--------|-------|------|
-| `default` | 7줄 | 전체 항목 표시 |
-| `focus` | 6줄 | 주요 메트릭 중심 |
-| `compact` | 3줄 | 간결한 표시 |
-| `minimal` | 3줄 | 최소 표시 |
+| 프리셋 | 줄 수 | 레이아웃 |
+|--------|-------|---------|
+| `default` | 7줄 | model git_user path / version branch / context / five_hour / seven_day / cost speed io_tokens / session_time code_lines cache_ratio |
+| `focus` | 6줄 | model path / branch / context / five_hour / seven_day / cost speed code_lines |
+| `compact` | 3줄 | model path branch / context cost / five_hour speed |
+| `minimal` | 3줄 | model path branch / context / five_hour |
 
 ### 직접 지정 방식
 
@@ -100,10 +101,30 @@ rm ~/.claude/statusline.js
 > 같은 줄에 `bar` 타입과 `inline`/`column` 타입을 함께 사용할 수 없습니다.
 > 허용 조합: `inline` + `inline`, `bar` 단독, `column` + `column`
 
+### config 오류 처리
+
+잘못된 config는 에러 배너를 표시하고 default 레이아웃으로 자동 fallback됩니다.
+
+```
+⚠️  statusline config error: unknown preset "typo" — using default
+```
+
 ### 슬래시 커맨드
 
-- `/statusline:customize` — 대화형으로 config 생성/수정
-- `/statusline:validate` — 현재 config 유효성 검사
+설치 스크립트(`install.sh` / `install.ps1`)가 실행 시 `~/.claude/commands/`에 커맨드 파일을 자동 설치합니다.
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/statusline:customize` | 대화형으로 config 생성/수정 (프리셋 선택 / 편집 / 직접 구성) |
+| `/statusline:validate` | 현재 config 유효성 검사 및 레이아웃 미리보기 |
+
+**수동 설치** (커맨드 파일만 별도로 설치할 때):
+
+```bash
+mkdir -p ~/.claude/commands
+cp .claude/commands/statusline_customize.md ~/.claude/commands/
+cp .claude/commands/statusline_validate.md ~/.claude/commands/
+```
 
 ## 요구사항
 
