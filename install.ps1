@@ -15,42 +15,26 @@ New-Item -ItemType Directory -Force -Path $StatuslineDir | Out-Null
 Invoke-WebRequest -Uri $RawUrl -OutFile $StatuslineFile -UseBasicParsing
 Write-Host "  Downloaded statusline.js -> $StatuslineFile"
 
-# 2. settings.json 설정
+# 2. settings.json 설정 (순수 PowerShell — Node.js 불필요)
 if (-not (Test-Path $SettingsFile)) {
   '{}' | Out-File -FilePath $SettingsFile -Encoding utf8NoBOM
 }
 
-# 현재 statusLine command 읽기
-$SettingsFileEscaped = $SettingsFile -replace '\\', '\\'
-$CurrentCmd = node -e @"
-const fs = require('fs');
-try {
-  const s = JSON.parse(fs.readFileSync('$SettingsFileEscaped', 'utf8'));
-  console.log((s.statusLine && s.statusLine.command) ? s.statusLine.command : '');
-} catch { console.log(''); }
-"@
+$settings = Get-Content $SettingsFile -Raw | ConvertFrom-Json
+$currentCmd = ""
+if ($settings.statusLine -and $settings.statusLine.command) {
+  $currentCmd = $settings.statusLine.command
+}
 
-$StatuslineFileEscaped = $StatuslineFile -replace '\\', '\\'
-
-if ([string]::IsNullOrWhiteSpace($CurrentCmd)) {
+if ([string]::IsNullOrWhiteSpace($currentCmd)) {
   # statusLine 미설정 → 새로 추가
-  node -e @"
-const fs = require('fs');
-const f = '$SettingsFileEscaped';
-const s = JSON.parse(fs.readFileSync(f, 'utf8'));
-s.statusLine = { type: 'command', command: 'node $StatuslineFileEscaped' };
-fs.writeFileSync(f, JSON.stringify(s, null, 2) + '\n');
-"@
+  $settings | Add-Member -NotePropertyName "statusLine" -NotePropertyValue @{
+    type = "command"
+    command = "node $StatuslineFile"
+  } -Force
+  $settings | ConvertTo-Json -Depth 10 | Out-File -FilePath $SettingsFile -Encoding utf8NoBOM
   Write-Host "  Configured statusLine in settings.json"
-} elseif ($CurrentCmd -like "*statusline-collector.js*") {
-  # socar-board collector 감지 → original_statusline_cmd에 pass-through 등록
-  $SocarBoardDir = "$env:USERPROFILE\.config\socar-board"
-  New-Item -ItemType Directory -Force -Path $SocarBoardDir | Out-Null
-  $OriginalCmdFile = "$SocarBoardDir\original_statusline_cmd"
-  "node $StatuslineFile" | Out-File -FilePath $OriginalCmdFile -Encoding utf8NoBOM -NoNewline
-  Write-Host "  socar-board collector 감지 -> pass-through 등록"
-  Write-Host "    $OriginalCmdFile"
-} elseif ($CurrentCmd -like "*statusline.js*") {
+} elseif ($currentCmd -like "*statusline.js*") {
   Write-Host "  statusLine already configured (skipped)"
 } else {
   Write-Host "  statusLine already configured with a different command (skipped)"
@@ -58,7 +42,7 @@ fs.writeFileSync(f, JSON.stringify(s, null, 2) + '\n');
   Write-Host "    `"statusLine`": { `"type`": `"command`", `"command`": `"node $StatuslineFile`" }"
 }
 
-# 3. 커맨드 파일 설치 (커스터마이징 도구)
+# 3. 커맨드 파일 설치
 $CommandsDir = "$StatuslineDir\commands"
 $RawCmdsBase = "https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/.claude/commands"
 New-Item -ItemType Directory -Force -Path $CommandsDir | Out-Null
@@ -67,7 +51,7 @@ foreach ($CmdFile in @("statusline_customize.md", "statusline_update.md")) {
   Write-Host "  Installed command: $CmdFile"
 }
 
-# 4. 업데이트 마커 초기화 (설치 직후 불필요한 업데이트 체크 방지)
+# 4. 업데이트 마커 초기화
 [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() | Out-File -FilePath "$StatuslineDir\.statusline-last-update" -Encoding utf8NoBOM -NoNewline
 
 Write-Host ""
