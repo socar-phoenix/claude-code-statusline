@@ -62,7 +62,7 @@ fs.writeFileSync(f, JSON.stringify(s, null, 2) + '\n');
 $CommandsDir = "$StatuslineDir\commands"
 $RawCmdsBase = "https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/.claude/commands"
 New-Item -ItemType Directory -Force -Path $CommandsDir | Out-Null
-foreach ($CmdFile in @("statusline_customize.md", "statusline_validate.md")) {
+foreach ($CmdFile in @("statusline_customize.md", "statusline_validate.md", "statusline_update.md")) {
   Invoke-WebRequest -Uri "$RawCmdsBase/$CmdFile" -OutFile "$CommandsDir\$CmdFile" -UseBasicParsing
   Write-Host "  Installed command: $CmdFile"
 }
