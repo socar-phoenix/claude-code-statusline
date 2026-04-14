@@ -267,21 +267,8 @@ process.stdin.on("end", () => {
     return "(n.n)";                           // 넉넉
   }
 
-  // ── Line 1: 모델 / 버디 / 경로 ──
   const CINDER_COLOR = "\x1b[38;5;208m";
   const expr = getBuddyExpr();
-  const companionLabel = companionName ? `  ${CINDER_COLOR}${buddyEmoji} ${companionName} ${GREEN}${expr}${R}` : "";
-  const line1Left = `${E.model} ${CYAN}${d.model?.display_name || ""}${R}`;
-  const COL_W = getVisWidth(line1Left);
-  const SP = "  ";
-  const line1 = line1Left + companionLabel + SP + `${E.folder} ${BLUE}${dir}${R}`;
-
-  // ── Line 1.5: 깃 브랜치 (별도 줄) ──
-  const lineGit = gitBranch ? `${E.branch} ${GREEN}${gitBranch}${R}` : "";
-
-  // ── 오른쪽 서브 컬럼 폭 ──
-  const RC1 = 18;
-  const RC2 = 18;
 
   // ── Line 1b: 컨텍스트 (브랜치 아래) ──
   function weightEmoji(pct) {
@@ -291,29 +278,11 @@ process.stdin.on("end", () => {
     if (pct >= 20)  return "🧳";  // 짐 있음
     return "🪶";                   // 가벼움
   }
-  const L4a = ctx ? `${weightEmoji(ctxPct)} ${WHITE}컨텍스트${R} ${progressBar(ctxPct, 30)}` : "";
-  const L4c1 = ctx ? `${pctColor(ctxPct)}${String(ctxPct).padStart(3)}%${R} ${pctColor(ctxPct)}${fmtTokens(usedTokens)}${WHITE}/${fmtTokens(ctx.context_window_size)}${R}` : "";
-  const lineCtx = ctx ? padR(L4a, COL_W) + SP + padR(L4c1, RC1) : "";
-
-  // ── Line 2: 현재토큰 (100% 초과 시 추가 비용 표시) ──
+  // ── five_hour 관련 계산값 ──
   const fiveHDisplay = Math.min(fiveHPct, 100);
-  const L2a = `${E.fire} ${WHITE}현재토큰${R} ${progressBar(fiveHDisplay, 30)}`;
   const fiveHOver = fiveHPct > 100 ? ` ${RED}(초과)${R}` : "";
-  const L2c1 = `${pctColor(fiveHPct)}${String(fiveHDisplay).padStart(3)}%${WHITE}${fiveHReset}${R}${fiveHOver}`;
-  const line2 = padR(L2a, COL_W) + SP + padR(L2c1, RC1);
 
-  // ── Line 2b: 주간토큰 ──
-  const L3a = `${E.chart} ${WHITE}주간토큰${R} ${progressBar(sevenDPct, 30)}`;
-  const L3c1 = `${pctColor(sevenDPct)}${String(sevenDPct).padStart(3)}%${WHITE}${sevenDReset}${R}`;
-  const line2b = padR(L3a, COL_W) + SP + padR(L3c1, RC1);
-
-  // ── Line 3: 비용 + 속도 + 입력 ──
-  const L2c2 = `${E.cost} ${WHITE}세션비용 ${costColor(costVal)}$${costVal != null ? costVal.toFixed(2) : "0.00"}${R}`;
-  const L2c3 = `${E.speed} ${WHITE}속도 ${speedColor(tpsVal)}${tpsVal != null ? tpsVal.toFixed(1) : "-"} t/s${R}`;
-  const L3c2 = `${E.input} ${WHITE}입력 ${tokenColor(inTokens)}${fmtTokens(inTokens)}${R}${WHITE}/${R} ${E.output}${WHITE}출력 ${tokenColor(outTokens)}${fmtTokens(outTokens)}${R}`;
-  const line3 = padR(L2c2, COL_W) + SP + padR(L2c3, RC1) + SP + padR(L3c2, COL_W);
-
-  // ── Line 3b: 세션시작 + 코드변경 + 출력 + 캐시/비율 ──
+  // ── session_time 관련 계산값 ──
   const hours = (duration || 0) / 3600000;
   function fatigueEmoji(h) {
     if (h >= 4)   return "🥵";  // 과로
@@ -324,19 +293,12 @@ process.stdin.on("end", () => {
     if (h >= 0.5) return "😊";  // 괜찮음
     return "😎";                 // 상쾌
   }
-  const L4c2 = duration ? `${fatigueEmoji(hours)} ${WHITE}세션 ${durationColor(duration)}${fmtDuration(duration)}${R}` : "";
-  const L4c3 = linesStr ? `${E.pencil} ${linesStr}` : "";
+  // ── cache_ratio 관련 계산값 ──
   const cacheRead = usage.cache_read_input_tokens || 0;
   const cacheCreate = usage.cache_creation_input_tokens || 0;
   const totalIn = (usage.input_tokens || 0) + cacheRead + cacheCreate;
   const cacheHit = totalIn > 0 ? (cacheRead / totalIn * 100).toFixed(0) : "-";
   const oiRatio = inTokens && outTokens ? (outTokens / inTokens).toFixed(1) : "-";
-  const cacheRatioStr = `🔄 ${WHITE}캐시${R} ${GREEN}${cacheHit}%${R} ${WHITE}/${R} ⚖️ ${WHITE}Ratio${R} ${CYAN}${oiRatio}${R}`;
-  const line3b = padR(L4c2 || "", COL_W) + SP + padR(L4c3 || "", RC1) + SP + padR(cacheRatioStr, COL_W);
-
-  // ── 출력 ──
-  const ver = d.version || "";
-  const lineGitVer = `⚙️ ${BLUE}v${ver}${R}` + (gitBranch ? `  ${E.branch} ${GREEN}${gitBranch}${R}` : "");
 
   // ── FIELDS 레지스트리 ──
   // 각 필드는 { type, render(data, opts) } 형태로 정의
@@ -591,7 +553,7 @@ process.stdin.on("end", () => {
     return { lines: cfg.lines || PRESETS.default.lines, error: null };
   }
 
-  // TODO: T006에서 loadConfig() + renderLayout() 호출로 교체 예정
-  const dataLines = [line1, lineGitVer, lineCtx, line2, line2b, line3, line3b].filter(Boolean);
-  process.stdout.write(dataLines.join("\n") + "\n");
+  const { lines, error } = loadConfig();
+  const errorBanner = error ? `⚠️  statusline config error: ${error} — using default` : null;
+  process.stdout.write(renderLayout(lines, d, errorBanner).join("\n") + "\n");
 });
