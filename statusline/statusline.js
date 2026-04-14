@@ -390,7 +390,7 @@ process.stdin.on("end", () => {
     // 컨텍스트 윈도우 사용률
     context: {
       type: "bar",
-      render: (data, opts = {}) => {
+      render: (_data, opts = {}) => {
         if (!ctx) return "";
         const label = `${weightEmoji(ctxPct)} ${WHITE}컨텍스트${R}`;
         const bar = progressBar(ctxPct, 30);
