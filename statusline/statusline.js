@@ -39,6 +39,45 @@ process.stdin.on("end", () => {
     process.exit(0);
   }
 
+  // ── 레이아웃 프리셋 정의 ──
+  const PRESETS = {
+    default: {
+      lines: [
+        ["model", "git_user", "path"],
+        ["version", "branch"],
+        ["context"],
+        ["five_hour"],
+        ["seven_day"],
+        ["cost", "speed", "io_tokens"],
+        ["session_time", "code_lines", "cache_ratio"]
+      ]
+    },
+    focus: {
+      lines: [
+        ["model", "path"],
+        ["branch"],
+        ["context"],
+        ["five_hour"],
+        ["seven_day"],
+        ["cost", "speed", "code_lines"]
+      ]
+    },
+    compact: {
+      lines: [
+        ["model", "path", "branch"],
+        ["context", "cost"],
+        ["five_hour", "speed"]
+      ]
+    },
+    minimal: {
+      lines: [
+        ["model", "path", "branch"],
+        ["context"],
+        ["five_hour"]
+      ]
+    }
+  };
+
   const E = { model:"🤖", folder:"📂", branch:"🌿", fire:"🔥", chart:"📊", cost:"💰", speed:"⚡️", input:"🔽", output:"🔼", brain:"🧠", clock:"⏱️", pencil:"✏️" };
 
   const R = "\x1b[0m";
