@@ -30,27 +30,18 @@
 
 ### 2단계: 선택 처리
 
-**1~4 선택 시** → 미리보기 표시:
+**1~4 선택 시** → `{"preset": "<이름>"}` 저장 → 완료 메시지:
 
 ```
+✅ ~/.claude/statusline.config.json 저장 완료
+
 프리셋: minimal
   Line 1: model, path, branch     [inline]
   Line 2: context                 [bar]
   Line 3: five_hour               [bar]
-
-적용할까요? (y/n)
 ```
-
-- `y` → `{"preset": "<이름>"}` 저장 → 완료
-- `n` → 1단계로 돌아감
 
 **5 선택 시** → 직접 구성 흐름으로 진행
-
-### 3단계: 완료
-
-```
-✅ ~/.claude/statusline.config.json 저장 완료
-```
 
 ---
 
