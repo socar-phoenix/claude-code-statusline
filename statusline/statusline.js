@@ -569,6 +569,13 @@ process.stdin.on("end", () => {
       return { lines: PRESETS.default.lines, error: `"lines" must not be empty` };
     }
 
+    // [V4b] 각 줄 배열이 비어있으면 안 됨
+    for (let i = 0; i < cfg.lines.length; i++) {
+      if (!Array.isArray(cfg.lines[i]) || cfg.lines[i].length === 0) {
+        return { lines: PRESETS.default.lines, error: `line ${i + 1}: must not be empty` };
+      }
+    }
+
     // [V5] 알 수 없는 필드명
     for (const line of cfg.lines) {
       for (const fieldName of line) {
@@ -578,7 +585,7 @@ process.stdin.on("end", () => {
       }
     }
 
-    // [V6] 중복 필드
+    // [V6] 중복 필드 (줄을 넘어 전체 lines에서 검사)
     const seen = new Set();
     for (const line of cfg.lines) {
       for (const fieldName of line) {
