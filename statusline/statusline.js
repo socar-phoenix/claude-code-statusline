@@ -337,6 +337,153 @@ process.stdin.on("end", () => {
   // ── 출력 ──
   const ver = d.version || "";
   const lineGitVer = `⚙️ ${BLUE}v${ver}${R}` + (gitBranch ? `  ${E.branch} ${GREEN}${gitBranch}${R}` : "");
+
+  // ── FIELDS 레지스트리 ──
+  // 각 필드는 { type, render(data, opts) } 형태로 정의
+  // type: "inline" | "bar" | "column"
+  // render: 해당 필드의 ANSI 문자열 반환
+  const FIELDS = {
+    // ── inline 타입 (5개) ──
+
+    // 모델명 표시
+    model: {
+      type: "inline",
+      render: (data) => `${E.model} ${CYAN}${data.model?.display_name || ""}${R}`,
+    },
+
+    // 코딩 버디 (git user) 표시 — 이름이 있을 때만 렌더
+    git_user: {
+      type: "inline",
+      render: () => {
+        if (!companionName) return "";
+        return `${CINDER_COLOR}${buddyEmoji} ${companionName} ${GREEN}${expr}${R}`;
+      },
+    },
+
+    // 현재 작업 디렉터리 경로
+    path: {
+      type: "inline",
+      render: () => `${E.folder} ${BLUE}${dir}${R}`,
+    },
+
+    // Claude Code 버전
+    version: {
+      type: "inline",
+      render: (data) => {
+        const v = data.version || "";
+        return `⚙️ ${BLUE}v${v}${R}`;
+      },
+    },
+
+    // 현재 git 브랜치 — 브랜치가 있을 때만 렌더
+    branch: {
+      type: "inline",
+      render: () => {
+        if (!gitBranch) return "";
+        return `${E.branch} ${GREEN}${gitBranch}${R}`;
+      },
+    },
+
+    // ── bar 타입 (3개) ──
+    // render(data, opts): opts.maxLabelWidth로 라벨 정렬 후 progress bar 붙여 반환
+
+    // 컨텍스트 윈도우 사용률
+    context: {
+      type: "bar",
+      render: (data, opts = {}) => {
+        if (!ctx) return "";
+        const label = `${weightEmoji(ctxPct)} ${WHITE}컨텍스트${R}`;
+        const bar = progressBar(ctxPct, 30);
+        const rightInfo = `${pctColor(ctxPct)}${String(ctxPct).padStart(3)}%${R} ${pctColor(ctxPct)}${fmtTokens(usedTokens)}${WHITE}/${fmtTokens(ctx.context_window_size)}${R}`;
+        const labelPad = opts.maxLabelWidth ? padR(label, opts.maxLabelWidth) : label;
+        return `${labelPad} ${bar} ${rightInfo}`;
+      },
+    },
+
+    // 5시간 토큰 사용률
+    five_hour: {
+      type: "bar",
+      render: (_data, opts = {}) => {
+        const label = `${E.fire} ${WHITE}현재토큰${R}`;
+        const bar = progressBar(fiveHDisplay, 30);
+        const rightInfo = `${pctColor(fiveHPct)}${String(fiveHDisplay).padStart(3)}%${WHITE}${fiveHReset}${R}${fiveHOver}`;
+        const labelPad = opts.maxLabelWidth ? padR(label, opts.maxLabelWidth) : label;
+        return `${labelPad} ${bar} ${rightInfo}`;
+      },
+    },
+
+    // 7일 토큰 사용률
+    seven_day: {
+      type: "bar",
+      render: (_data, opts = {}) => {
+        const label = `${E.chart} ${WHITE}주간토큰${R}`;
+        const bar = progressBar(sevenDPct, 30);
+        const rightInfo = `${pctColor(sevenDPct)}${String(sevenDPct).padStart(3)}%${WHITE}${sevenDReset}${R}`;
+        const labelPad = opts.maxLabelWidth ? padR(label, opts.maxLabelWidth) : label;
+        return `${labelPad} ${bar} ${rightInfo}`;
+      },
+    },
+
+    // ── column 타입 (6개) ──
+    // render(data, opts): opts.colWidth로 padR 정렬
+
+    // 세션 비용 (USD)
+    cost: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        const content = `${E.cost} ${WHITE}세션비용 ${costColor(costVal)}$${costVal != null ? costVal.toFixed(2) : "0.00"}${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 토큰 생성 속도 (t/s)
+    speed: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        const content = `${E.speed} ${WHITE}속도 ${speedColor(tpsVal)}${tpsVal != null ? tpsVal.toFixed(1) : "-"} t/s${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 입력/출력 토큰 수
+    io_tokens: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        const content = `${E.input} ${WHITE}입력 ${tokenColor(inTokens)}${fmtTokens(inTokens)}${R}${WHITE}/${R} ${E.output}${WHITE}출력 ${tokenColor(outTokens)}${fmtTokens(outTokens)}${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 세션 경과 시간 — duration 있을 때만 렌더
+    session_time: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        if (!duration) return "";
+        const content = `${fatigueEmoji(hours)} ${WHITE}세션 ${durationColor(duration)}${fmtDuration(duration)}${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 코드 변경 줄 수 — linesStr 있을 때만 렌더
+    code_lines: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        if (!linesStr) return "";
+        const content = `${E.pencil} ${linesStr}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+
+    // 캐시 히트율 및 입출력 토큰 비율
+    cache_ratio: {
+      type: "column",
+      render: (_data, opts = {}) => {
+        const content = `🔄 ${WHITE}캐시${R} ${GREEN}${cacheHit}%${R} ${WHITE}/${R} ⚖️ ${WHITE}Ratio${R} ${CYAN}${oiRatio}${R}`;
+        return opts.colWidth ? padR(content, opts.colWidth) : content;
+      },
+    },
+  };
+
   const dataLines = [line1, lineGitVer, lineCtx, line2, line2b, line3, line3b].filter(Boolean);
   process.stdout.write(dataLines.join("\n") + "\n");
 });
