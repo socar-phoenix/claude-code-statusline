@@ -163,7 +163,7 @@ if (Test-Path $f) {
 ## 요구사항
 
 - Claude Code CLI
-- Node.js (macOS/Linux: 대부분 개발 환경에 설치됨, Windows: 별도 설치 필요)
+- Node.js
 
 ## License
 
