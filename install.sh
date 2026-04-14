@@ -58,7 +58,16 @@ else
   echo "    \"statusLine\": { \"type\": \"command\", \"command\": \"node $STATUSLINE_FILE\" }"
 fi
 
-# 3. 업데이트 마커 초기화 (설치 직후 불필요한 업데이트 체크 방지)
+# 3. 커맨드 파일 설치 (커스터마이징 도구)
+COMMANDS_DIR="$STATUSLINE_DIR/commands"
+RAW_CMDS_BASE="https://raw.githubusercontent.com/socar-phoenix/claude-code-statusline/main/.claude/commands"
+mkdir -p "$COMMANDS_DIR"
+for CMD_FILE in statusline_customize.md statusline_validate.md; do
+  curl -sL "$RAW_CMDS_BASE/$CMD_FILE" -o "$COMMANDS_DIR/$CMD_FILE"
+  echo "  Installed command: $CMD_FILE"
+done
+
+# 4. 업데이트 마커 초기화 (설치 직후 불필요한 업데이트 체크 방지)
 echo "$(date +%s)000" > "$STATUSLINE_DIR/.statusline-last-update"
 
 echo ""
