@@ -591,6 +591,7 @@ process.stdin.on("end", () => {
     return { lines: cfg.lines || PRESETS.default.lines, error: null };
   }
 
+  // TODO: T006에서 loadConfig() + renderLayout() 호출로 교체 예정
   const dataLines = [line1, lineGitVer, lineCtx, line2, line2b, line3, line3b].filter(Boolean);
   process.stdout.write(dataLines.join("\n") + "\n");
 });
