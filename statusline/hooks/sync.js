@@ -14,7 +14,7 @@ const backupFile = path.join(destDir, ".statusline-original-cmd");
 
 // 1. 파일 동기화
 try {
-  const src = path.join(pluginRoot, "statusline.js");
+  const src = path.join(__dirname, "..", "statusline.js");
   const srcContent = fs.readFileSync(src, "utf8");
   let destContent = "";
   try { destContent = fs.readFileSync(dest, "utf8"); } catch {}

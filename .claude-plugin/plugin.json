@@ -1,0 +1,22 @@
+{
+  "name": "statusline",
+  "description": "Claude Code 터미널에 실시간 세션 메트릭을 표시하는 커스텀 상태바",
+  "author": {
+    "name": "socar-phoenix"
+  },
+  "version": "1.0.0",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/statusline/hooks/sync.js\"",
+            "async": false
+          }
+        ]
+      }
+    ]
+  }
+}
