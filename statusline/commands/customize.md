@@ -64,11 +64,11 @@ description: "statusline 레이아웃 커스터마이징 (프리셋 선택 / 직
 
 ```
 사용 가능한 필드:
-  [inline] model, git_user, path, version, branch
-  [bar]    context, five_hour, seven_day
+  [inline] model, git_user, path, version, branch, effort, session
+  [bar]    context, five_hour, seven_day, fable
   [column] cost, speed, io_tokens, session_time, code_lines, cache_ratio
 
-bar 필드는 다른 타입과 같은 줄에 배치 불가
+bar 필드는 다른 타입과 같은 줄에 배치 불가 (bar 2개는 한 줄에 나란히 배치 가능)
 ```
 
 ### 줄별 입력
