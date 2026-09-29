@@ -15,14 +15,17 @@ claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plu
 ## 주요 기능
 
 - **Rate Limits** — 5시간/7일 토큰 사용량 프로그래스 바 + 리셋 카운트다운
+- **Fable 주간 한도** — Fable 모델 전용 주간 사용률 프로그래스 바 (백그라운드 갱신, 30분 이상 오래되면 회색 표시)
 - **비용 & 속도** — 세션 누적 비용(USD), 출력 속도 (tokens/sec)
 - **토큰 입출력** — 세션 누적 입력/출력 토큰
 - **컨텍스트 윈도우** — 현재 사용률 프로그래스 바 + 사용/최대 토큰
 - **세션 시간** — 세션 시작 후 경과 시간
 - **코드 변경량** — 이번 세션에서 추가/삭제된 라인 수
 - **Git** — 현재 브랜치, git user.name 자동 감지
+- **effort 레벨** — 현재 세션의 effort 레벨을 레벨별 색상으로 표시
+- **세션 식별자** — session_id 앞 8자리, 같은 디렉터리에서 세션이 여럿일 때 구분용
 - **구간별 색상** — 사용량에 따라 초록/노랑/빨강 자동 변경
-- **커스터마이징** — 4개 내장 프리셋, 직접 레이아웃 구성, `/statusline:customize`
+- **커스터마이징** — 4개 내장 프리셋, 직접 레이아웃 구성, 막대 2개 한 줄 나란히 배치, `/statusline:customize`
 
 ## 필드 상세 설명
 
@@ -35,6 +38,8 @@ claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plu
 | `path` | 📂 현재 작업 디렉터리 | 홈 디렉터리는 `~`로 축약 |
 | `version` | ⚙️ Claude Code 버전 | — |
 | `branch` | 🌿 현재 git 브랜치 | git 저장소가 아니면 미표시 |
+| `effort` | 🔆 effort 레벨 | stdin에 `effort.level`이 없으면 미표시. low 회색 / medium 초록 / high 청록 / xhigh 노랑 / max 빨강 |
+| `session` | 🔖 session_id 앞 8자리 | 같은 디렉터리에 세션이 여럿일 때 어느 세션인지 구분하는 용도 |
 
 #### `git_user` — 코딩 버디
 
@@ -61,6 +66,7 @@ claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plu
 | `context` | 컨텍스트 윈도우 사용률 | 라벨 이모지가 사용률에 따라 변함 (🪶→🧳→💪→😤→🏋️) |
 | `five_hour` | 5시간 토큰 Rate Limit | 우측에 리셋까지 남은 시간 표시 (`↻Xh Ym`), 100% 초과 시 `(초과)` 표시 |
 | `seven_day` | 7일 토큰 Rate Limit | 우측에 리셋까지 남은 시간 표시 (`↻Xh Ym`) |
+| `fable` | 📖 Fable 주간 한도 사용률 | 우측에 리셋까지 남은 시간 표시. 캐시가 30분 이상 오래되면 막대·수치를 회색으로 바꾸고 `⚠Xm 전`으로 경과 시간 표시 |
 
 #### `context` 라벨 이모지
 
@@ -71,6 +77,14 @@ claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plu
 | 40–60% | 💪 | 좀 묵직 |
 | 60–80% | 😤 | 무거움 |
 | 80%+ | 🏋️ | 한계 |
+
+#### `fable` — Fable 주간 한도
+
+상태바 stdin에는 5시간/7일 한도만 오고 모델별 한도는 없습니다. Fable 전용 주간 한도는 `/usage` 엔드포인트에만 있어, 상태바가 `node statusline.js --refresh-fable`을 백그라운드로 띄워 5분마다 조회하고 `~/.claude/usage-fable-cache.json`에 캐시합니다.
+
+- 인증은 Claude Code가 macOS Keychain(`Claude Code-credentials`)에 저장한 OAuth 토큰을 실행 시점에 읽어 사용합니다. 없으면 `~/.claude/.credentials.json`을 봅니다.
+- 조회에 실패해도 상태바 렌더링은 막지 않습니다. 캐시가 없으면 `fable` 필드는 미표시됩니다.
+- Fable 모델 한도가 없는 플랜에서는 값이 오지 않아 미표시됩니다.
 
 ### column 타입
 
@@ -127,12 +141,14 @@ claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plu
 ```json
 {
   "lines": [
-    ["model", "path", "branch"],
-    ["context"],
-    ["five_hour"]
+    ["model", "effort", "path", "branch", "session"],
+    ["context", "fable"],
+    ["five_hour", "seven_day"]
   ]
 }
 ```
+
+bar 필드 2개를 한 줄에 두면 좌우로 나란히 배치됩니다. 오른쪽 막대의 시작 열은 column 줄의 `session_time` 세그먼트에 맞춰 정렬됩니다.
 
 ### 사용 가능한 필드
 
@@ -143,9 +159,12 @@ claude plugin marketplace add socar-phoenix/claude-code-statusline && claude plu
 | `inline` | `path` | 작업 디렉터리 |
 | `inline` | `version` | Claude Code 버전 |
 | `inline` | `branch` | git 브랜치 |
+| `inline` | `effort` | effort 레벨 |
+| `inline` | `session` | 세션 식별자 (session_id 앞 8자리) |
 | `bar` | `context` | 컨텍스트 윈도우 사용률 |
 | `bar` | `five_hour` | 5시간 Rate Limit |
 | `bar` | `seven_day` | 7일 Rate Limit |
+| `bar` | `fable` | Fable 주간 한도 |
 | `column` | `cost` | 세션 비용 |
 | `column` | `speed` | 출력 속도 |
 | `column` | `io_tokens` | 입출력 토큰 수 |
